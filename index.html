@@ -368,10 +368,12 @@
     // build first round matches
     const firstRound = [];
     for (let i = 0; i < size; i += 2) {
-      const match = { t1: names[i], t2: names[i + 1], winner: null, seed1: i + 1, seed2: i + 2 };
-      // auto-advance bye
-      if (!match.t1) match.winner = match.t2;
-      if (!match.t2) match.winner = match.t1;
+      const dead = !names[i] && !names[i + 1];
+      const match = { t1: names[i], t2: names[i + 1], winner: null, seed1: i + 1, seed2: i + 2, dead };
+      if (!dead) {
+        if (!match.t1) match.winner = match.t2;
+        else if (!match.t2) match.winner = match.t1;
+      }
       firstRound.push(match);
     }
 
@@ -381,7 +383,7 @@
       const prev = rounds[r - 1];
       const cur = [];
       for (let m = 0; m < prev.length; m += 2) {
-        cur.push({ t1: null, t2: null, winner: null, seed1: null, seed2: null });
+        cur.push({ t1: null, t2: null, winner: null, seed1: null, seed2: null, dead: false });
       }
       rounds.push(cur);
     }
@@ -407,17 +409,19 @@
           const w2 = mb?.winner ?? null;
           const s1 = w1 ? (w1 === ma.t1 ? ma.seed1 : ma.seed2) : null;
           const s2 = w2 ? (w2 === mb.t1 ? mb.seed1 : mb.seed2) : null;
+          const newDead = (ma.dead === true) && (mb.dead === true);
 
-          if (next.t1 !== w1 || next.t2 !== w2) {
+          if (next.t1 !== w1 || next.t2 !== w2 || next.dead !== newDead) {
             next.t1 = w1; next.t2 = w2;
             next.seed1 = s1; next.seed2 = s2;
+            next.dead = newDead;
             if (next.winner && next.winner !== next.t1 && next.winner !== next.t2) next.winner = null;
             changed = true;
           }
 
-          // auto-advance bye
-          if (next.t1 && !next.t2 && next.winner !== next.t1) { next.winner = next.t1; changed = true; }
-          else if (next.t2 && !next.t1 && next.winner !== next.t2) { next.winner = next.t2; changed = true; }
+          // auto-advance solo se lo slot avversario viene da una partita morta (bye permanente)
+          if (next.t1 && !next.t2 && mb.dead && next.winner !== next.t1) { next.winner = next.t1; changed = true; }
+          else if (next.t2 && !next.t1 && ma.dead && next.winner !== next.t2) { next.winner = next.t2; changed = true; }
           else if (!next.t1 && !next.t2 && next.winner) { next.winner = null; changed = true; }
         }
       }
@@ -476,9 +480,8 @@
 
           if (!team) {
             teamEl.classList.add('tbd');
-            teamEl.style.fontStyle = 'italic';
-            teamEl.style.color = 'var(--muted)';
-            teamEl.textContent = 'BYE';
+            // BYE = slot permanentemente vuoto; TBD = in attesa del risultato di un match
+            teamEl.textContent = match.winner ? 'BYE' : 'TBD';
           } else {
             if (match.winner === team) teamEl.classList.add('winner');
             else if (match.winner && match.winner !== team) teamEl.classList.add('eliminated');
