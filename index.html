@@ -206,7 +206,7 @@
     .team:last-child { border-bottom: none; }
     .team:hover:not(.tbd):not(.winner) { background: var(--surface2); }
     .team.winner { background: #22c55e18; color: var(--winner); font-weight: 700; }
-    .team.tbd { color: var(--muted); cursor: default; font-style: italic; }
+    .team.tbd { color: var(--muted); cursor: default; font-style: italic; font-size: 0.8rem; }
     .team.eliminated { opacity: 0.38; text-decoration: line-through; }
 
     .seed {
@@ -395,20 +395,31 @@
   }
 
   function propagateWinners() {
-    for (let r = 0; r < rounds.length - 1; r++) {
-      for (let m = 0; m < rounds[r].length; m += 2) {
-        const next = rounds[r + 1][m / 2];
-        const w1 = rounds[r][m]?.winner;
-        const w2 = rounds[r][m + 1]?.winner;
-        next.t1 = w1 || null;
-        next.t2 = w2 || null;
-        next.seed1 = w1 ? rounds[r][m].seed1 : null;
-        next.seed2 = w2 ? rounds[r][m + 1].seed1 : null;
-        // auto-advance if only one team present
-        if (next.t1 && !next.t2) { next.winner = next.t1; propagateWinners(); return; }
-        if (next.t2 && !next.t1) { next.winner = next.t2; propagateWinners(); return; }
-        if (!next.t1 && !next.t2) next.winner = null;
-        else if (next.winner && next.t1 !== next.winner && next.t2 !== next.winner) next.winner = null;
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (let r = 0; r < rounds.length - 1; r++) {
+        for (let m = 0; m < rounds[r].length; m += 2) {
+          const ma = rounds[r][m];
+          const mb = rounds[r][m + 1];
+          const next = rounds[r + 1][m / 2];
+          const w1 = ma?.winner ?? null;
+          const w2 = mb?.winner ?? null;
+          const s1 = w1 ? (w1 === ma.t1 ? ma.seed1 : ma.seed2) : null;
+          const s2 = w2 ? (w2 === mb.t1 ? mb.seed1 : mb.seed2) : null;
+
+          if (next.t1 !== w1 || next.t2 !== w2) {
+            next.t1 = w1; next.t2 = w2;
+            next.seed1 = s1; next.seed2 = s2;
+            if (next.winner && next.winner !== next.t1 && next.winner !== next.t2) next.winner = null;
+            changed = true;
+          }
+
+          // auto-advance bye
+          if (next.t1 && !next.t2 && next.winner !== next.t1) { next.winner = next.t1; changed = true; }
+          else if (next.t2 && !next.t1 && next.winner !== next.t2) { next.winner = next.t2; changed = true; }
+          else if (!next.t1 && !next.t2 && next.winner) { next.winner = null; changed = true; }
+        }
       }
     }
   }
@@ -447,6 +458,13 @@
         cell.className = 'match-cell';
         cell.style.flex = `${Math.pow(2, r)}`;
 
+        // partita completamente vuota: spacer invisibile
+        if (!match.t1 && !match.t2) {
+          cell.style.visibility = 'hidden';
+          matchesEl.appendChild(cell);
+          return;
+        }
+
         const matchEl = document.createElement('div');
         matchEl.className = 'match';
 
@@ -458,7 +476,9 @@
 
           if (!team) {
             teamEl.classList.add('tbd');
-            teamEl.textContent = 'TBD';
+            teamEl.style.fontStyle = 'italic';
+            teamEl.style.color = 'var(--muted)';
+            teamEl.textContent = 'BYE';
           } else {
             if (match.winner === team) teamEl.classList.add('winner');
             else if (match.winner && match.winner !== team) teamEl.classList.add('eliminated');
@@ -469,6 +489,7 @@
             teamEl.appendChild(seedSpan);
             teamEl.appendChild(document.createTextNode(team));
 
+            // click solo se partita reale (non bye) e non ancora decisa
             if (!match.winner && match.t1 && match.t2) {
               teamEl.onclick = () => openModal(r, m);
             }
