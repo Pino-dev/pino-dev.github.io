@@ -332,7 +332,7 @@
     const row = document.createElement('div');
     row.className = 'team-row';
     row.innerHTML = `
-      <input type="text" placeholder="Nome squadra" value="${val}" />
+      <input type="text" placeholder="Nome Squadra o Partecipante" value="${val}" />
       <button onclick="this.parentElement.remove()" title="Rimuovi">✕</button>
     `;
     list.appendChild(row);
@@ -429,6 +429,13 @@
   }
 
   /* ── Render ── */
+  function activeRound() {
+    for (let r = 0; r < rounds.length; r++) {
+      if (rounds[r].some(m => !m.dead && !m.winner && (m.t1 || m.t2))) return r;
+    }
+    return rounds.length - 1;
+  }
+
   const ROUND_NAMES = ['Primo Turno', 'Secondo Turno', 'Quarti', 'Semifinali', 'Finale', 'Finale'];
 
   function roundLabel(r, total) {
