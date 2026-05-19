@@ -476,8 +476,8 @@
           }
 
           // auto-advance solo se lo slot avversario viene da una partita morta (bye permanente)
-          if (next.t1 && !next.t2 && (mb.dead || (!mb.t1 && !mb.t2)) && next.winner !== next.t1) { next.winner = next.t1; changed = true; }
-          else if (next.t2 && !next.t1 && (ma.dead || (!ma.t1 && !ma.t2)) && next.winner !== next.t2) { next.winner = next.t2; changed = true; }
+          if (next.t1 && !next.t2 && mb.dead && next.winner !== next.t1) { next.winner = next.t1; changed = true; }
+          else if (next.t2 && !next.t1 && ma.dead && next.winner !== next.t2) { next.winner = next.t2; changed = true; }
           else if (!next.t1 && !next.t2 && next.winner) { next.winner = null; changed = true; }
         }
       }
