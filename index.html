@@ -409,7 +409,7 @@
   function startTournament() {
     const inputs = [...document.querySelectorAll('#team-list input')];
     const names = inputs.map(i => i.value.trim()).filter(Boolean);
-    if (names.length < 2) { alert('Inserisci almeno 2 squadre!'); return; }
+    if (names.length < 2) { alert('Inserisci almeno 2 giocatori!'); return; }
 
     const size = nextPow2(names.length);
     // shuffle for seeding
@@ -448,7 +448,7 @@
     render();
     document.getElementById('setup').style.display = 'none';
     document.getElementById('bracket-screen').style.display = 'block';
-    document.getElementById('bracket-title').textContent = `Torneo (${names.filter(Boolean).length} squadre)`;
+    document.getElementById('bracket-title').textContent = `Torneo (${names.filter(Boolean).length} giocatori)`;
   }
 
   function propagateWinners() {
