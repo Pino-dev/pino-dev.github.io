@@ -345,7 +345,7 @@
   <h2>Crea il torneo</h2>
   <div class="team-list" id="team-list"></div>
   <div class="btn-row" style="margin-bottom:1rem">
-    <button class="secondary" onclick="addTeamRow()">+ Aggiungi squadra</button>
+    <button class="secondary" onclick="addTeamRow()">+ Aggiungi giocatore</button>
   </div>
   <div class="btn-row">
     <button class="primary" onclick="startTournament()">Genera tabellone</button>
@@ -387,7 +387,7 @@
     const row = document.createElement('div');
     row.className = 'team-row';
     row.innerHTML = `
-      <input type="text" placeholder="Nome Squadra o Partecipante" value="${val}" />
+      <input type="text" placeholder="Nome Giocatore" value="${val}" />
       <button onclick="this.parentElement.remove()" title="Rimuovi">✕</button>
     `;
     list.appendChild(row);
