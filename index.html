@@ -186,7 +186,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       overflow: hidden;
-      width: 160px;
+      width: 210px;
       margin: 0 auto;
       position: relative;
       z-index: 1;
@@ -195,19 +195,41 @@
     .team {
       display: flex;
       align-items: center;
-      padding: 0.5rem 0.7rem;
-      gap: 0.5rem;
-      cursor: pointer;
+      padding: 0.45rem 0.6rem;
+      gap: 0.45rem;
+      cursor: default;
       transition: background 0.15s;
       border-bottom: 1px solid var(--border);
       font-size: 0.88rem;
       min-height: 36px;
     }
     .team:last-child { border-bottom: none; }
-    .team:hover:not(.tbd):not(.winner) { background: var(--surface2); }
     .team.winner { background: #22c55e18; color: var(--winner); font-weight: 700; }
     .team.tbd { color: var(--muted); cursor: default; font-style: italic; font-size: 0.8rem; }
     .team.eliminated { opacity: 0.38; text-decoration: line-through; }
+
+    .team-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .score-input {
+      width: 42px;
+      padding: 2px 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-align: center;
+      outline: none;
+      flex-shrink: 0;
+      -moz-appearance: textfield;
+    }
+    .score-input::-webkit-outer-spin-button,
+    .score-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .score-input:focus { border-color: var(--accent); }
+    .team.winner .score-input { border-color: var(--winner); background: #22c55e18; color: var(--winner); }
+    .team.eliminated .score-input { border-color: var(--border); }
+    .score-input.tie { border-color: var(--accent2); }
 
     .seed {
       font-size: 0.7rem;
@@ -308,6 +330,7 @@
       .team.eliminated { opacity: 0.4; }
       .round-title { color: #666; }
       .seed { background: #f3f4f6; color: #666; }
+      .score-input { border-color: #ccc; background: #f9f9f9; color: #000; }
     }
   </style>
 </head>
@@ -401,7 +424,7 @@
     const firstRound = [];
     for (let i = 0; i < size; i += 2) {
       const dead = !names[i] && !names[i + 1];
-      const match = { t1: names[i], t2: names[i + 1], winner: null, seed1: i + 1, seed2: i + 2, dead };
+      const match = { t1: names[i], t2: names[i + 1], winner: null, seed1: i + 1, seed2: i + 2, dead, score1: null, score2: null };
       if (!dead) {
         if (!match.t1) match.winner = match.t2;
         else if (!match.t2) match.winner = match.t1;
@@ -415,7 +438,7 @@
       const prev = rounds[r - 1];
       const cur = [];
       for (let m = 0; m < prev.length; m += 2) {
-        cur.push({ t1: null, t2: null, winner: null, seed1: null, seed2: null, dead: false });
+        cur.push({ t1: null, t2: null, winner: null, seed1: null, seed2: null, dead: false, score1: null, score2: null });
       }
       rounds.push(cur);
     }
@@ -444,6 +467,7 @@
           const newDead = (ma.dead === true) && (mb.dead === true);
 
           if (next.t1 !== w1 || next.t2 !== w2 || next.dead !== newDead) {
+            if (next.t1 !== w1 || next.t2 !== w2) { next.score1 = null; next.score2 = null; }
             next.t1 = w1; next.t2 = w2;
             next.seed1 = s1; next.seed2 = s2;
             next.dead = newDead;
@@ -519,7 +543,6 @@
 
           if (!team) {
             teamEl.classList.add('tbd');
-            // BYE = slot permanentemente vuoto; TBD = in attesa del risultato di un match
             teamEl.textContent = match.winner ? 'BYE' : 'TBD';
           } else {
             if (match.winner === team) teamEl.classList.add('winner');
@@ -529,11 +552,38 @@
             seedSpan.className = 'seed';
             seedSpan.textContent = seed || '?';
             teamEl.appendChild(seedSpan);
-            teamEl.appendChild(document.createTextNode(team));
 
-            // click solo se partita reale (non bye) e non ancora decisa
-            if (!match.winner && match.t1 && match.t2) {
-              teamEl.onclick = () => openModal(r, m);
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'team-name';
+            nameSpan.textContent = team;
+            teamEl.appendChild(nameSpan);
+
+            // casella punteggio (solo partite reali con entrambe le squadre)
+            if (match.t1 && match.t2) {
+              const scoreKey = n === 1 ? 'score1' : 'score2';
+              const input = document.createElement('input');
+              input.type = 'number';
+              input.className = 'score-input';
+              input.min = '0';
+              input.placeholder = '—';
+              if (match[scoreKey] !== null) input.value = match[scoreKey];
+
+              input.addEventListener('change', () => {
+                const val = input.value.trim();
+                match[scoreKey] = val === '' ? null : parseInt(val, 10);
+                const s1 = match.score1, s2 = match.score2;
+                if (s1 !== null && s2 !== null) {
+                  if (s1 > s2) match.winner = match.t1;
+                  else if (s2 > s1) match.winner = match.t2;
+                  else match.winner = null; // pareggio: nessun vincitore finché non cambia
+                } else {
+                  match.winner = null;
+                }
+                propagateWinners();
+                render();
+              });
+
+              teamEl.appendChild(input);
             }
           }
           matchEl.appendChild(teamEl);
