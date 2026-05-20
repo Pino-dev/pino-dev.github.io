@@ -4,457 +4,466 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Torneo</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
+/* ── VARIABILI ────────────────────────────────────────────── */
 :root {
-  --bg:       #0f1117;
-  --surface:  #1a1d27;
-  --surface2: #22263a;
-  --accent:   #00e676;
-  --gold:     #ffd700;
-  --silver:   #c0c0c0;
-  --bronze:   #cd7f32;
-  --text:     #e8eaf0;
-  --muted:    #6b7280;
-  --danger:   #ef4444;
-  --ok-bg:    #0d2116;
-  --ok-bdr:   #00e676;
-  --radius:   10px;
-  --ft:       'Barlow Condensed', system-ui, sans-serif;
-  --fb:       'Inter', system-ui, sans-serif;
+  --bg:     #0f1117;
+  --surf:   #1a1d27;
+  --surf2:  #22263a;
+  --accent: #00ff88;
+  --gold:   #ffd700;
+  --silver: #c0c0c0;
+  --bronze: #cd7f32;
+  --text:   #e8eaf0;
+  --muted:  #6b7280;
+  --danger: #ef4444;
+  --ok-bg:  #081a0e;
+  --ok-bdr: #00ff88;
+  --ft: 'Barlow Condensed', system-ui, sans-serif;
+  --fm: 'DM Mono', monospace;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); }
 
-body {
-  font-family: var(--fb);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
+/* ── SISTEMA SCHERMATE ────────────────────────────────────── */
+/* Una sola schermata visibile alla volta, transizione fade+slide */
+.screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  opacity: 0; pointer-events: none;
+  transform: translateY(14px);
+  transition: opacity .3s ease, transform .3s ease;
 }
+.screen.active { opacity: 1; pointer-events: all; transform: none; }
+/* Disabilita transizione su init */
+.no-trans .screen { transition: none !important; }
 
-/* ── SCREENS ───────────────────────────────────────────── */
-.screen { display: none; min-height: 100vh; animation: fadeIn .35s ease; }
-.screen.active { display: block; }
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ── MODAL RESUME ─────────────────────────────────────────── */
+.modal-bg {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,.78);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s;
 }
+.modal-bg.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--surf); border: 1px solid var(--surf2);
+  border-radius: 14px; padding: 32px 28px;
+  max-width: 380px; width: 92%; text-align: center;
+}
+.modal-box h3 {
+  font-family: var(--ft); font-size: 1.5rem; font-weight: 800;
+  color: var(--accent); margin-bottom: 10px;
+}
+.modal-box p { color: var(--muted); font-size: .9rem; line-height: 1.5; margin-bottom: 24px; }
+.modal-btns { display: flex; gap: 10px; justify-content: center; }
 
-/* ── BUTTONS ───────────────────────────────────────────── */
+/* ── PULSANTI ─────────────────────────────────────────────── */
 .btn {
-  font-family: var(--fb);
-  font-size: .875rem;
-  font-weight: 600;
-  padding: 8px 20px;
-  border-radius: var(--radius);
-  border: none;
-  cursor: pointer;
-  transition: background .18s, transform .15s;
-  white-space: nowrap;
+  font-family: inherit; font-size: .875rem; font-weight: 600;
+  padding: 9px 22px; border-radius: 8px; border: none;
+  cursor: pointer; white-space: nowrap;
+  transition: background .18s, transform .12s, opacity .18s;
 }
-.btn-primary { background: var(--accent); color: #000; }
-.btn-primary:hover { background: #00ff9a; transform: translateY(-1px); }
-.btn-danger  { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
-.btn-danger:hover  { background: var(--danger); color: #fff; }
-.btn-sm   { padding: 4px 12px; font-size: .8rem; }
-.btn-edit { padding: 4px 8px;  font-size: .85rem; background: var(--surface2); color: var(--muted); border: 1px solid var(--surface2); }
-.btn-edit:hover { color: var(--text); border-color: var(--muted); }
+.btn:active { transform: scale(.97); }
+.btn-primary   { background: var(--accent); color: #000; }
+.btn-primary:hover { background: #1fffa0; }
+.btn-secondary { background: var(--surf2); color: var(--text); }
+.btn-secondary:hover { background: #2d3148; }
+.btn-danger    { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+.btn-danger:hover { background: var(--danger); color: #fff; }
+.btn-sm { padding: 5px 12px; font-size: .78rem; }
+/* pulsante icona (conferma / modifica) */
+.btn-ic {
+  padding: 5px 9px; font-size: .85rem;
+  background: var(--surf2); color: var(--muted);
+  border: 1px solid transparent; border-radius: 6px;
+  cursor: pointer; transition: all .15s;
+  flex-shrink: 0;
+}
+.btn-ic:hover { color: var(--text); border-color: var(--muted); }
+.btn-ic.ok    { background: rgba(0,255,136,.12); color: var(--accent); border-color: var(--ok-bdr); }
 
-/* ── SETUP SCREEN ──────────────────────────────────────── */
+/* ── SCHERMATA 1: SETUP ───────────────────────────────────── */
 #screen-setup {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 60px 16px 40px;
+  align-items: center; justify-content: flex-start;
+  overflow-y: auto; padding: 60px 16px 48px;
 }
-
 .setup-card {
-  background: var(--surface);
-  border-radius: 16px;
-  padding: 36px 40px;
-  width: 100%;
-  max-width: 500px;
-  border: 1px solid var(--surface2);
+  background: var(--surf); border: 1px solid var(--surf2);
+  border-radius: 14px; padding: 36px 40px;
+  width: 100%; max-width: 480px;
 }
-
-.setup-card h2 {
-  font-family: var(--ft);
-  font-size: 2.2rem;
-  font-weight: 800;
-  color: var(--accent);
-  margin-bottom: 28px;
-  text-align: center;
-  letter-spacing: 1px;
+.setup-title {
+  font-family: var(--ft); font-size: 2.2rem; font-weight: 800;
+  color: var(--accent); letter-spacing: 1px;
+  text-align: center; margin-bottom: 28px;
 }
-
-.form-group { margin-bottom: 20px; }
-.form-group label {
-  display: block;
-  font-size: .75rem;
-  font-weight: 600;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .8px;
-  margin-bottom: 6px;
+.fg { margin-bottom: 18px; }
+.fg label {
+  display: block; font-size: .7rem; font-weight: 700;
+  color: var(--muted); text-transform: uppercase;
+  letter-spacing: .9px; margin-bottom: 6px;
 }
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 10px 14px;
-  background: var(--surface2);
-  border: 1px solid #2d3148;
-  border-radius: 8px;
-  color: var(--text);
-  font-family: var(--fb);
-  font-size: .95rem;
+.fg input, .fg select {
+  width: 100%; padding: 10px 14px;
+  background: var(--surf2); border: 1px solid #2d3148;
+  border-radius: 8px; color: var(--text);
+  font-family: inherit; font-size: .95rem;
   transition: border-color .2s;
-  appearance: auto;
 }
-.form-group input:focus,
-.form-group select:focus { outline: none; border-color: var(--accent); }
-
+.fg input:focus, .fg select:focus { outline: none; border-color: var(--accent); }
+.fg input.err { border-color: var(--danger); }
 .players-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 24px;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 22px;
 }
-
-.p-wrap { display: flex; flex-direction: column; gap: 4px; }
-.p-wrap label { font-size: .72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; }
-.p-wrap input {
-  padding: 8px 12px;
-  background: var(--surface2);
-  border: 1px solid #2d3148;
-  border-radius: 8px;
-  color: var(--text);
-  font-family: var(--fb);
-  font-size: .9rem;
+.pf { display: flex; flex-direction: column; gap: 4px; }
+.pf label {
+  font-size: .68rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .7px;
+}
+.pf input {
+  padding: 8px 12px; background: var(--surf2);
+  border: 1px solid #2d3148; border-radius: 8px;
+  color: var(--text); font-family: inherit; font-size: .9rem;
   transition: border-color .2s;
 }
-.p-wrap input:focus  { outline: none; border-color: var(--accent); }
-.p-wrap input.err    { border-color: var(--danger); }
+.pf input:focus { outline: none; border-color: var(--accent); }
+.pf input.err   { border-color: var(--danger); }
+.err-msg { color: var(--danger); font-size: .8rem; min-height: 1.2em; margin-bottom: 12px; }
 
-.error-msg { color: var(--danger); font-size: .8rem; margin-bottom: 14px; }
+/* ── SCHERMATA 2: PARTITE + CLASSIFICA ───────────────────── */
+#screen-game { overflow: hidden; }
 
-/* ── GAME SCREEN ───────────────────────────────────────── */
-#screen-game { padding: 0; }
-
-.app-header {
-  background: var(--surface);
-  border-bottom: 2px solid var(--accent);
-  padding: 10px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+.game-hdr {
+  flex-shrink: 0;
+  background: var(--surf); border-bottom: 2px solid var(--accent);
+  padding: 10px 18px;
+  display: flex; align-items: center; gap: 12px;
+  z-index: 10;
 }
-.app-header h1 {
-  font-family: var(--ft);
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--accent);
-  letter-spacing: 1px;
+.game-hdr h1 {
+  font-family: var(--ft); font-size: 1.5rem; font-weight: 800;
+  color: var(--accent); letter-spacing: 1px;
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+.hdr-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.prog-txt  { font-family: var(--fm); font-size: .75rem; color: var(--muted); }
 
-.game-layout {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  min-height: calc(100vh - 53px);
-}
+/* layout a 2 colonne (70/30) */
+.game-body { flex: 1; display: flex; overflow: hidden; }
 
 .matches-panel {
-  padding: 24px;
-  overflow-y: auto;
-  border-right: 1px solid var(--surface2);
+  flex: 7; overflow-y: auto;
+  padding: 18px 20px;
+  border-right: 1px solid var(--surf2);
 }
-
 .standings-panel {
-  padding: 24px;
-  background: var(--surface);
-  position: sticky;
-  top: 53px;
-  height: calc(100vh - 53px);
-  overflow-y: auto;
+  flex: 3; overflow-y: auto;
+  padding: 18px 16px;
+  background: var(--surf);
 }
 
 .panel-title {
-  font-family: var(--ft);
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--accent);
-  letter-spacing: 1px;
-  margin-bottom: 14px;
-  text-transform: uppercase;
+  font-family: var(--ft); font-size: 1.15rem; font-weight: 700;
+  color: var(--accent); letter-spacing: 1px;
+  text-transform: uppercase; margin-bottom: 12px;
 }
 
-/* progress */
-.prog-wrap { background: var(--surface2); border-radius: 4px; height: 5px; margin-bottom: 20px; overflow: hidden; }
-.prog-bar  { height: 100%; background: var(--accent); border-radius: 4px; transition: width .4s ease; }
+/* barra avanzamento */
+.prog-bar-wrap { height: 4px; background: var(--surf2); border-radius: 2px; margin-bottom: 16px; overflow: hidden; }
+.prog-bar      { height: 100%; background: var(--accent); border-radius: 2px; transition: width .45s ease; }
 
-/* rounds */
-.round-block { margin-bottom: 26px; }
-.round-title {
-  font-family: var(--ft);
-  font-size: .85rem;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  margin-bottom: 8px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--surface2);
+/* raggruppamento turni */
+.round-block { margin-bottom: 22px; }
+.round-lbl {
+  font-family: var(--ft); font-size: .78rem; font-weight: 700;
+  color: var(--muted); text-transform: uppercase; letter-spacing: 1.4px;
+  padding-bottom: 6px; margin-bottom: 8px;
+  border-bottom: 1px solid var(--surf2);
 }
 
-/* match row */
+/* ── RIGA PARTITA — 4 colonne CSS Grid ────────────────────
+   grid-template-columns: 1fr auto 1fr auto
+   col 1: nome A  (text-align: right)
+   col 2: [input A] – [input B]  (flexbox, centrato)
+   col 3: nome B  (text-align: left)
+   col 4: pulsante
+──────────────────────────────────────────────────────────── */
 .match-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
   align-items: center;
-  gap: 8px;
-  padding: 9px 12px;
-  background: var(--surface);
-  border-radius: 8px;
-  border: 1px solid var(--surface2);
-  margin-bottom: 7px;
-  transition: background .2s, border-color .2s;
+  column-gap: 10px;
+  padding: 8px 10px;
+  background: var(--surf); border: 1px solid var(--surf2);
+  border-radius: 8px; margin-bottom: 6px;
+  transition: background .22s, border-color .22s;
 }
 .match-row.confirmed { background: var(--ok-bg); border-color: var(--ok-bdr); }
-.match-row.bye       { opacity: .35; pointer-events: none; }
+.match-row.bye-row   { opacity: .3; pointer-events: none; }
 
-.p-name {
-  flex: 1;
-  font-size: .88rem;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.p-name.right { text-align: right; }
+/* nomi */
+.mn-a { text-align: right; font-size: .85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mn-b { text-align: left;  font-size: .85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.score-wrap {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-}
-.score-wrap input {
-  width: 44px;
-  text-align: center;
-  padding: 5px 4px;
-  background: var(--surface2);
-  border: 1px solid #2d3148;
-  border-radius: 6px;
-  color: var(--text);
-  font-family: var(--fb);
-  font-size: .95rem;
-  font-weight: 600;
-  transition: border-color .2s;
-}
-.score-wrap input:focus    { outline: none; border-color: var(--accent); }
-.score-wrap input:disabled { opacity: .65; cursor: not-allowed; }
-.score-wrap input.err      { border-color: var(--danger); }
-.sep { font-weight: 700; color: var(--muted); }
-
-/* standings table */
-.st { width: 100%; border-collapse: collapse; font-size: .78rem; }
-.st th {
-  font-family: var(--ft);
-  font-size: .72rem;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .7px;
+/* area punteggi */
+.score-area { display: flex; align-items: center; gap: 5px; }
+.score-area input {
+  width: 44px; text-align: center;
+  font-family: var(--fm); font-size: .95rem; font-weight: 500;
   padding: 5px 3px;
-  text-align: center;
-  border-bottom: 1px solid var(--surface2);
+  background: var(--surf2); border: 1px solid #2d3148;
+  border-radius: 6px; color: var(--text);
+  transition: border-color .2s;
+  /* nasconde frecce spinner */
+  -moz-appearance: textfield;
 }
-.st td { padding: 7px 3px; text-align: center; border-bottom: 1px solid rgba(255,255,255,.04); }
-.st td.nm { text-align: left; font-weight: 600; font-size: .82rem; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.score-area input::-webkit-outer-spin-button,
+.score-area input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.score-area input:focus    { outline: none; border-color: var(--accent); }
+.score-area input:disabled { opacity: .65; cursor: not-allowed; }
+.score-area input.err      { border-color: var(--danger); }
+.score-sep { font-family: var(--fm); color: var(--muted); user-select: none; }
+
+/* ── TABELLA CLASSIFICA ───────────────────────────────────── */
+.st { width: 100%; border-collapse: collapse; font-size: .75rem; }
+.st th {
+  font-family: var(--ft); font-size: .68rem; font-weight: 700;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .7px;
+  padding: 5px 2px; text-align: center;
+  border-bottom: 1px solid var(--surf2);
+}
+.st td {
+  font-family: var(--fm); padding: 7px 2px; text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.st td.nm {
+  font-family: system-ui,sans-serif; text-align: left;
+  font-weight: 600; font-size: .78rem;
+  max-width: 85px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .st tr:last-child td { border-bottom: none; }
-.st tr.r1 { background: rgba(255,215,0,.09); }
-.st tr.r2 { background: rgba(192,192,192,.05); }
-.st tr.r3 { background: rgba(205,127,50,.05); }
+.st tr.r1 { background: rgba(255,215,0,.1); }
+.st tr.r2 { background: rgba(192,192,192,.06); }
+.st tr.r3 { background: rgba(205,127,50,.06); }
 .rbadge { font-size: .85rem; font-weight: 700; }
 .r1 .rbadge { color: var(--gold); }
 .r2 .rbadge { color: var(--silver); }
 .r3 .rbadge { color: var(--bronze); }
 
-/* ── WINNER SCREEN ─────────────────────────────────────── */
+/* ── SCHERMATA 3: VINCITORE ───────────────────────────────── */
 #screen-winner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 16px;
-  min-height: 100vh;
+  align-items: center; justify-content: flex-start;
+  overflow-y: auto; padding: 36px 16px 48px;
   text-align: center;
-  position: relative;
-  overflow: hidden;
 }
-
-.w-inner { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
-
-.trophy { font-size: 5rem; animation: rock 2.5s ease-in-out infinite; margin-bottom: 12px; }
-@keyframes rock {
-  0%,100% { transform: rotate(-7deg) scale(1); }
-  50%      { transform: rotate(7deg)  scale(1.06); }
+.w-inner {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%; max-width: 540px; margin: 0 auto;
 }
+.trophy-ico { font-size: 4.5rem; display: block; animation: rock 2.5s ease-in-out infinite; margin-bottom: 10px; }
+@keyframes rock { 0%,100%{transform:rotate(-7deg) scale(1)} 50%{transform:rotate(7deg) scale(1.06)} }
 
 .w-label { font-family: var(--ft); font-size: 1rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 4px; }
-.w-event { font-family: var(--ft); font-size: .9rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+.w-event { font-family: var(--ft); font-size: .9rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
 .w-name  {
-  font-family: var(--ft);
-  font-size: clamp(2.4rem, 8vw, 4.5rem);
-  font-weight: 800;
-  color: var(--gold);
-  line-height: 1;
-  margin-bottom: 32px;
-  animation: glow 1.8s ease-in-out infinite;
+  font-family: var(--ft); font-size: clamp(2.6rem, 9vw, 5rem);
+  font-weight: 800; color: var(--gold); line-height: 1.1;
+  margin-bottom: 28px;
+  animation: glow 2s ease-in-out infinite;
 }
-@keyframes glow {
-  0%,100% { text-shadow: 0 0 20px rgba(255,215,0,.4); }
-  50%      { text-shadow: 0 0 40px rgba(255,215,0,.85); }
+@keyframes glow { 0%,100%{text-shadow:0 0 18px rgba(255,215,0,.4)} 50%{text-shadow:0 0 42px rgba(255,215,0,.95)} }
+
+/* podio */
+.podium { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 28px; }
+.pod-pl { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.pod-name { font-family: var(--ft); font-size: .9rem; font-weight: 700; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pod-pts  { font-family: var(--fm); font-size: .72rem; color: var(--muted); }
+.pod-blk  {
+  width: 82px; border-radius: 8px 8px 0 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--ft); font-size: 1.5rem; font-weight: 800; color: #000;
+}
+.pod1 .pod-blk { height: 100px; background: var(--gold); }
+.pod2 .pod-blk { height: 72px;  background: var(--silver); }
+.pod3 .pod-blk { height: 52px;  background: var(--bronze); }
+
+.winner-st { margin: 8px 0 28px; width: 100%; }
+.w-btns    { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+/* coriandoli */
+.confetti-box { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.bit { position: absolute; top: -24px; border-radius: 2px; animation: cfall linear infinite; }
+@keyframes cfall { to { transform: translateY(110vh) rotate(760deg); opacity: 0; } }
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 700px) {
+  #screen-game     { overflow-y: auto; }
+  .game-body       { flex-direction: column; overflow: visible; height: auto; }
+  .matches-panel   { flex: none; overflow: visible; border-right: none; border-bottom: 1px solid var(--surf2); }
+  .standings-panel { flex: none; overflow: visible; }
+  .setup-card      { padding: 24px 18px; }
+  .players-grid    { grid-template-columns: 1fr; }
+  .mn-a, .mn-b     { font-size: .78rem; }
+  .score-area input { width: 38px; }
+  .pod-blk         { width: 68px; }
 }
 
-/* podium */
-.podium { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 36px; }
-.podium-place { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.pod-name { font-family: var(--ft); font-size: .95rem; font-weight: 700; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pod-block {
-  width: 80px;
-  border-radius: 8px 8px 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--ft);
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #000;
-}
-.pod1 .pod-block { height: 100px; background: var(--gold); }
-.pod2 .pod-block { height: 70px;  background: var(--silver); }
-.pod3 .pod-block { height: 50px;  background: var(--bronze); }
+/* ── STAMPA ───────────────────────────────────────────────── */
+@media print {
+  html, body { height: auto; overflow: visible; background: #fff; color: #000; }
 
-/* confetti */
-.confetti-box {
-  position: fixed; inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
-.bit {
-  position: absolute;
-  top: -20px;
-  border-radius: 2px;
-  animation: fall linear infinite;
-}
-@keyframes fall {
-  to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-}
+  /* Mostra solo la schermata attiva */
+  .screen {
+    position: static !important; opacity: 1 !important;
+    transform: none !important; pointer-events: all !important;
+    display: none !important; overflow: visible !important;
+    height: auto !important;
+  }
+  .screen.active { display: flex !important; }
 
-/* ── RESPONSIVE ────────────────────────────────────────── */
-@media (max-width: 740px) {
-  .game-layout { grid-template-columns: 1fr; }
-  .standings-panel { position: static; height: auto; border-top: 1px solid var(--surface2); }
-  .matches-panel { border-right: none; }
-  .p-name { font-size: .8rem; }
-  .score-wrap input { width: 38px; }
-  .players-grid { grid-template-columns: 1fr; }
-  .pod-block { width: 64px; }
-  .setup-card { padding: 24px 20px; }
+  /* Pannelli game in stampa */
+  .game-body       { flex-direction: column; overflow: visible; height: auto; }
+  .matches-panel   { flex: none; overflow: visible; height: auto; border: none; }
+  .standings-panel { flex: none; overflow: visible; height: auto; background: #fff; }
+
+  /* Nasconde elementi non stampabili */
+  .btn, .btn-ic, .hdr-right, .prog-bar-wrap, .confetti-box, .modal-bg { display: none !important; }
+
+  /* Header */
+  .game-hdr { background: #fff; border-bottom: 2px solid #000; }
+  .game-hdr h1 { color: #000; }
+
+  /* Righe partita */
+  .match-row { background: #fff !important; border: 1px solid #ccc !important; break-inside: avoid; }
+  .match-row.confirmed { background: #f0fff4 !important; }
+  .score-area input { background: transparent; border: none; color: #000; opacity: 1 !important; }
+  .mn-a, .mn-b, .score-sep { color: #000; }
+  .round-lbl { color: #555; border-color: #ccc; }
+
+  /* Classifica */
+  .panel-title  { color: #000; }
+  .st th        { color: #555; border-color: #ccc; }
+  .st td        { color: #000; }
+  .st tr.r1     { background: #fffde7 !important; }
+  .st tr.r2     { background: #f5f5f5 !important; }
+  .st tr.r3     { background: #fff3e0 !important; }
+  .rbadge       { font-size: .75rem; }
+
+  /* Vincitore */
+  .w-name      { color: #000 !important; text-shadow: none !important; animation: none !important; }
+  .w-label, .w-event, .pod-pts { color: #555 !important; }
+  .trophy-ico  { animation: none !important; }
+  .pod1 .pod-blk, .pod2 .pod-blk, .pod3 .pod-blk { color: #000; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .w-btns      { display: none !important; }
 }
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════
-     SCREEN 1 — SETUP
-     ══════════════════════════════════════════════════════ -->
-<div id="screen-setup" class="screen active">
-  <div class="setup-card">
-    <h2>⚽ NUOVO TORNEO</h2>
+<!-- ══ MODAL RIPRENDI TORNEO ═════════════════════════════════ -->
+<div class="modal-bg" id="modal-resume">
+  <div class="modal-box">
+    <h3>Torneo in corso</h3>
+    <p id="modal-msg"></p>
+    <div class="modal-btns">
+      <button class="btn btn-primary"   onclick="onResumeYes()">Sì, riprendi</button>
+      <button class="btn btn-secondary" onclick="onResumeNo()">No, nuovo torneo</button>
+    </div>
+  </div>
+</div>
 
-    <div class="form-group">
+<!-- ══ SCHERMATA 1: SETUP ════════════════════════════════════ -->
+<div id="screen-setup" class="screen">
+  <div class="setup-card">
+    <div class="setup-title">⚽ TORNEO</div>
+
+    <div class="fg">
       <label>Nome del torneo</label>
-      <input id="inp-name" type="text" placeholder="es. Champions di Quartiere" maxlength="40"/>
+      <input id="inp-tname" type="text" placeholder="es. Champions di Quartiere" maxlength="40"/>
     </div>
 
-    <div class="form-group">
+    <div class="fg">
       <label>Numero di giocatori</label>
-      <select id="sel-n"></select>
+      <select id="sel-n" onchange="buildFields()"></select>
     </div>
 
     <div id="players-fields"></div>
-    <div id="setup-err" class="error-msg" style="display:none"></div>
+    <p class="err-msg" id="setup-err"></p>
 
-    <button class="btn btn-primary" style="width:100%;padding:12px;font-size:1.05rem;letter-spacing:.5px"
-      onclick="onGenerate()">Genera Torneo →</button>
+    <button class="btn btn-primary"
+      style="width:100%;padding:13px;font-size:1.05rem;letter-spacing:.5px"
+      onclick="onStart()">Inizia Torneo →</button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     SCREEN 2 — GAME
-     ══════════════════════════════════════════════════════ -->
+<!-- ══ SCHERMATA 2: PARTITE + CLASSIFICA ════════════════════ -->
 <div id="screen-game" class="screen">
-  <header class="app-header">
+  <header class="game-hdr">
     <h1 id="hdr-title">TORNEO</h1>
-    <div style="display:flex;align-items:center;gap:10px">
-      <span id="hdr-prog" style="font-size:.78rem;color:var(--muted)"></span>
-      <button class="btn btn-danger btn-sm" onclick="onReset()">↺ Reset</button>
+    <div class="hdr-right">
+      <span class="prog-txt" id="hdr-prog"></span>
+      <button class="btn btn-sm btn-secondary" onclick="window.print()">🖨 Stampa</button>
+      <button class="btn btn-sm btn-danger"    onclick="onReset()">↺ Reset</button>
     </div>
   </header>
 
-  <div class="game-layout">
+  <div class="game-body">
     <div class="matches-panel">
       <div class="panel-title">Partite</div>
-      <div class="prog-wrap"><div class="prog-bar" id="prog-bar"></div></div>
-      <div id="rounds-container"></div>
+      <div class="prog-bar-wrap"><div class="prog-bar" id="prog-bar"></div></div>
+      <div id="rounds-wrap"></div>
     </div>
     <div class="standings-panel">
       <div class="panel-title">Classifica</div>
-      <div id="standings-container"></div>
+      <div id="standings-wrap"></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     SCREEN 3 — WINNER
-     ══════════════════════════════════════════════════════ -->
+<!-- ══ SCHERMATA 3: VINCITORE ════════════════════════════════ -->
 <div id="screen-winner" class="screen">
   <div class="confetti-box" id="confetti-box"></div>
   <div class="w-inner">
-    <div class="trophy">🏆</div>
+    <span class="trophy-ico">🏆</span>
     <div class="w-label">Campione del Torneo</div>
     <div class="w-event" id="w-event"></div>
     <div class="w-name"  id="w-name"></div>
     <div class="podium"  id="podium"></div>
-    <button class="btn btn-primary" style="font-size:1rem;padding:12px 36px"
-      onclick="onNewTournament()">+ Nuovo Torneo</button>
+    <div class="winner-st" id="winner-st"></div>
+    <div class="w-btns">
+      <button class="btn btn-secondary" onclick="window.print()">🖨 Stampa risultati</button>
+      <button class="btn btn-primary"   onclick="onNewTournament()">🔄 Nuovo Torneo</button>
+    </div>
   </div>
 </div>
 
 <script>
-// ────────────────────────────────────────────────────────
-//  CONSTANTS
-// ────────────────────────────────────────────────────────
+// ============================================================
+//  COSTANTI
+// ============================================================
+const LS  = 'torneo_v3';
 const BYE = '__BYE__';
-const LS_KEY = 'torneo_v1';
 
-// ────────────────────────────────────────────────────────
-//  STATE  { name, players[], hasBye, rounds[] }
-//  match  { a, b, scoreA, scoreB, confirmed }
-// ────────────────────────────────────────────────────────
+// ============================================================
+//  STATO  S = { name, players[], hasBye, rounds[] }
+//  match  = { a, b, scoreA, scoreB, confirmed }
+// ============================================================
 let S = null;
 
-// ────────────────────────────────────────────────────────
-//  BOOT
-// ────────────────────────────────────────────────────────
+// ============================================================
+//  AVVIO
+// ============================================================
 (function boot() {
+  // Popola selettore numero giocatori
   const sel = document.getElementById('sel-n');
   for (let i = 2; i <= 16; i++) {
     const o = document.createElement('option');
@@ -462,99 +471,125 @@ let S = null;
     if (i === 4) o.selected = true;
     sel.appendChild(o);
   }
-  sel.addEventListener('change', buildPlayerFields);
-  buildPlayerFields();
+  buildFields();
 
+  // Controlla localStorage
   try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) { S = JSON.parse(raw); showScreen('game'); renderGame(); }
-  } catch { localStorage.removeItem(LS_KEY); }
+    const raw = localStorage.getItem(LS);
+    if (raw) {
+      S = JSON.parse(raw);
+      document.getElementById('modal-msg').textContent =
+        `Vuoi riprendere il torneo "${S.name}"?`;
+      showScreen('setup', false);
+      document.getElementById('modal-resume').classList.add('open');
+      return;
+    }
+  } catch { localStorage.removeItem(LS); }
+
+  showScreen('setup', false);
 })();
 
-// ────────────────────────────────────────────────────────
-//  SCREENS
-// ────────────────────────────────────────────────────────
-function showScreen(id) {
+// ============================================================
+//  GESTIONE SCHERMATE
+// ============================================================
+function showScreen(id, animate = true) {
+  if (!animate) document.body.classList.add('no-trans');
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('active');
+  if (!animate) {
+    // Force reflow per applicare immediatamente, poi ri-abilita transizioni
+    void document.body.offsetHeight;
+    document.body.classList.remove('no-trans');
+  }
 }
 
-// ────────────────────────────────────────────────────────
-//  SETUP
-// ────────────────────────────────────────────────────────
-function buildPlayerFields() {
-  const n = +document.getElementById('sel-n').value;
-  const g = document.createElement('div');
-  g.className = 'players-grid';
+// ============================================================
+//  MODAL RESUME
+// ============================================================
+function onResumeYes() {
+  document.getElementById('modal-resume').classList.remove('open');
+  showScreen('game');
+  renderGame();
+}
+
+function onResumeNo() {
+  document.getElementById('modal-resume').classList.remove('open');
+  S = null; localStorage.removeItem(LS);
+  showScreen('setup');
+}
+
+// ============================================================
+//  SETUP — campi giocatori
+// ============================================================
+function buildFields() {
+  const n   = +document.getElementById('sel-n').value;
+  const grid = document.createElement('div');
+  grid.className = 'players-grid';
   for (let i = 1; i <= n; i++) {
-    g.innerHTML += `
-      <div class="p-wrap">
+    grid.innerHTML += `
+      <div class="pf">
         <label>Giocatore ${i}</label>
         <input type="text" placeholder="Nome…" maxlength="20" data-pi="${i}"/>
       </div>`;
   }
   const c = document.getElementById('players-fields');
-  c.innerHTML = '';
-  c.appendChild(g);
+  c.innerHTML = ''; c.appendChild(grid);
 }
 
-function onGenerate() {
+function onStart() {
   const errEl = document.getElementById('setup-err');
-  errEl.style.display = 'none';
+  errEl.textContent = '';
   document.querySelectorAll('[data-pi]').forEach(i => i.classList.remove('err'));
 
   const inputs = [...document.querySelectorAll('[data-pi]')];
-  const names = [];
-  const seen  = new Set();
-  let ok = true;
+  const names  = []; const seen = new Set(); let ok = true;
 
   inputs.forEach(inp => {
     const v = inp.value.trim();
     if (!v) { inp.classList.add('err'); ok = false; return; }
     if (seen.has(v.toLowerCase())) {
       inp.classList.add('err'); ok = false;
-      errEl.textContent = 'Nomi duplicati — ogni giocatore deve avere un nome univoco.';
-      errEl.style.display = 'block';
+      errEl.textContent = 'Nomi duplicati: ogni giocatore deve avere un nome univoco.';
       return;
     }
-    seen.add(v.toLowerCase());
-    names.push(v);
+    seen.add(v.toLowerCase()); names.push(v);
   });
 
   if (!ok) {
-    if (errEl.style.display === 'none') {
-      errEl.textContent = 'Compila tutti i campi giocatore.';
-      errEl.style.display = 'block';
-    }
+    if (!errEl.textContent) errEl.textContent = 'Compila tutti i campi giocatore.';
     return;
   }
 
-  let players = [...names];
-  let hasBye  = false;
+  let players = [...names]; let hasBye = false;
   if (players.length % 2 !== 0) { players.push(BYE); hasBye = true; }
 
   S = {
-    name: document.getElementById('inp-name').value.trim() || 'Torneo',
-    players,
-    hasBye,
-    rounds: circleRoundRobin(players.length)
+    name:    document.getElementById('inp-tname').value.trim() || 'Torneo',
+    players, hasBye,
+    rounds:  circleRoundRobin(players.length)
   };
+
   save(); showScreen('game'); renderGame();
 }
 
-// ────────────────────────────────────────────────────────
-//  CIRCLE / POLYGON ROUND-ROBIN
-// ────────────────────────────────────────────────────────
-function circleRoundRobin(n) {       // n is always even
-  const ids = Array.from({length: n}, (_, i) => i);
+// ============================================================
+//  ALGORITMO ROUND-ROBIN — Circle / Polygon Method
+//  n sempre pari (BYE aggiunto se dispari)
+//  → n-1 turni, n/2 partite per turno
+//  → ids[0] fisso, ruota ids[1..n-1] in senso orario ogni turno
+// ============================================================
+function circleRoundRobin(n) {
+  const ids = Array.from({ length: n }, (_, i) => i);
   const rounds = [];
+
   for (let r = 0; r < n - 1; r++) {
     const round = [];
     for (let i = 0; i < n / 2; i++) {
       round.push({ a: ids[i], b: ids[n - 1 - i], scoreA: null, scoreB: null, confirmed: false });
     }
     rounds.push(round);
-    // Rotate ids[1..n-1] clockwise, ids[0] stays fixed
+
+    // Rotazione: fissa ids[0], sposta ids[1..n-1] di una posizione
     const last = ids[n - 1];
     for (let i = n - 1; i > 1; i--) ids[i] = ids[i - 1];
     ids[1] = last;
@@ -562,75 +597,79 @@ function circleRoundRobin(n) {       // n is always even
   return rounds;
 }
 
-// ────────────────────────────────────────────────────────
-//  GAME RENDER
-// ────────────────────────────────────────────────────────
+// ============================================================
+//  RENDER SCHERMATA 2
+// ============================================================
 function renderGame() {
   document.getElementById('hdr-title').textContent = S.name.toUpperCase();
   renderMatches();
-  renderStandings();
+  renderStandings();   // aggiorna classifica da zero
   updateProgress();
 }
 
+// ── PARTITE ─────────────────────────────────────────────────
 function renderMatches() {
-  const wrap = document.getElementById('rounds-container');
+  const wrap = document.getElementById('rounds-wrap');
   wrap.innerHTML = '';
 
   S.rounds.forEach((round, ri) => {
     const block = document.createElement('div');
     block.className = 'round-block';
-    block.innerHTML = `<div class="round-title">Turno ${ri + 1}</div>`;
+    block.innerHTML = `<div class="round-lbl">Turno ${ri + 1}</div>`;
 
     round.forEach((m, mi) => {
-      const na = S.players[m.a];
-      const nb = S.players[m.b];
+      const na  = S.players[m.a];
+      const nb  = S.players[m.b];
       const bye = na === BYE || nb === BYE;
-      const la  = na === BYE ? 'BYE' : na;
-      const lb  = nb === BYE ? 'BYE' : nb;
+      const la  = bye ? 'Turno libero' : na;
+      const lb  = bye ? '—' : nb;
       const dis = m.confirmed ? 'disabled' : '';
       const va  = m.scoreA !== null ? m.scoreA : '';
       const vb  = m.scoreB !== null ? m.scoreB : '';
 
       const row = document.createElement('div');
-      row.className = 'match-row' + (m.confirmed ? ' confirmed' : '') + (bye ? ' bye' : '');
+      row.className = 'match-row' +
+        (m.confirmed ? ' confirmed' : '') +
+        (bye         ? ' bye-row'   : '');
       row.id = `m-${ri}-${mi}`;
 
+      // 4 colonne: [nome A (right)] | [scoreA – scoreB] | [nome B (left)] | [btn]
       row.innerHTML = `
-        <span class="p-name" title="${la}">${la}</span>
-        <div class="score-wrap">
+        <div class="mn-a" title="${la}">${la}</div>
+
+        <div class="score-area">
           <input type="number" min="0" value="${va}" ${dis}
             id="sa-${ri}-${mi}"
-            onkeydown="scoreKey(event,${ri},${mi})"/>
-          <span class="sep">–</span>
+            onkeydown="if(event.key==='Enter'){event.preventDefault();doConfirm(${ri},${mi})}"/>
+          <span class="score-sep">–</span>
           <input type="number" min="0" value="${vb}" ${dis}
             id="sb-${ri}-${mi}"
-            onkeydown="scoreKey(event,${ri},${mi})"/>
+            onkeydown="if(event.key==='Enter'){event.preventDefault();doConfirm(${ri},${mi})}"/>
         </div>
-        <span class="p-name right" title="${lb}">${lb}</span>
-        ${bye ? '' : `
-        <button class="btn btn-sm ${m.confirmed ? 'btn-edit' : 'btn-primary'}"
-          onclick="${m.confirmed ? `unlock(${ri},${mi})` : `confirm(${ri},${mi})`}">
-          ${m.confirmed ? '✎' : '✓'}
-        </button>`}`;
 
+        <div class="mn-b" title="${lb}">${lb}</div>
+
+        ${bye
+          ? '<div></div>'
+          : `<button class="btn-ic${m.confirmed ? ' ok' : ''}"
+               title="${m.confirmed ? 'Modifica risultato' : 'Conferma risultato'}"
+               onclick="${m.confirmed ? `doUnlock(${ri},${mi})` : `doConfirm(${ri},${mi})`}">
+               ${m.confirmed ? '🖊' : '✓'}
+             </button>`}
+      `;
       block.appendChild(row);
     });
+
     wrap.appendChild(block);
   });
 }
 
-function scoreKey(e, ri, mi) {
-  if (e.key === 'Enter') { e.preventDefault(); confirm(ri, mi); }
-}
-
-function confirm(ri, mi) {
+function doConfirm(ri, mi) {
   const ia = document.getElementById(`sa-${ri}-${mi}`);
   const ib = document.getElementById(`sb-${ri}-${mi}`);
-  const va = parseInt(ia.value);
-  const vb = parseInt(ib.value);
+  const va = parseInt(ia.value), vb = parseInt(ib.value);
 
   ia.classList.remove('err'); ib.classList.remove('err');
-
   if (isNaN(va) || va < 0) { ia.classList.add('err'); ia.focus(); return; }
   if (isNaN(vb) || vb < 0) { ib.classList.add('err'); ib.focus(); return; }
 
@@ -639,7 +678,7 @@ function confirm(ri, mi) {
   save(); renderGame(); checkDone();
 }
 
-function unlock(ri, mi) {
+function doUnlock(ri, mi) {
   S.rounds[ri][mi].confirmed = false;
   save(); renderGame();
 }
@@ -657,19 +696,20 @@ function checkDone() {
   if (all.length && all.every(m => m.confirmed)) setTimeout(showWinner, 700);
 }
 
-// ────────────────────────────────────────────────────────
-//  STANDINGS
-// ────────────────────────────────────────────────────────
-function standings() {
-  const map = {};
+// ── CLASSIFICA ───────────────────────────────────────────────
+// Ricalcola SEMPRE da zero leggendo tutte le partite confermate.
+function computeStandings() {
+  // 1. Inizializza tutti i giocatori (escluso BYE) a 0 per ogni statistica
+  const idx = {};
   S.players.forEach((name, i) => {
-    if (name !== BYE) map[i] = { name, pg:0, v:0, p:0, s:0, gf:0, gs:0, pts:0 };
+    if (name !== BYE) idx[i] = { name, pg:0, v:0, p:0, s:0, gf:0, gs:0, pts:0 };
   });
 
+  // 2. Scorri tutte le partite confermate e aggiorna le statistiche
   S.rounds.forEach(round => round.forEach(m => {
     if (!m.confirmed) return;
-    if (S.players[m.a] === BYE || S.players[m.b] === BYE) return;
-    const A = map[m.a], B = map[m.b];
+    const A = idx[m.a], B = idx[m.b];
+    if (!A || !B) return; // partita con BYE: ignorata
     A.pg++; B.pg++;
     A.gf += m.scoreA; A.gs += m.scoreB;
     B.gf += m.scoreB; B.gs += m.scoreA;
@@ -678,28 +718,27 @@ function standings() {
     else                           { A.p++; B.p++; A.pts++; B.pts++; }
   }));
 
-  return Object.values(map).sort((a, b) => {
+  // 3. Ordina: Punti → DR → Gf → alfabetico
+  return Object.values(idx).sort((a, b) => {
     if (b.pts !== a.pts) return b.pts - a.pts;
     const da = a.gf - a.gs, db = b.gf - b.gs;
     if (db !== da) return db - da;
-    if (b.gf !== a.gf) return b.gf - a.gf;
+    if (b.gf  !== a.gf)  return b.gf - a.gf;
     return a.name.localeCompare(b.name);
   });
 }
 
-function renderStandings() {
-  const rows = standings();
-  const medals = ['🥇','🥈','🥉'];
-  let h = `<table class="st">
-    <thead><tr>
-      <th>Pos</th><th class="nm" style="text-align:left">Nome</th>
-      <th>PG</th><th>V</th><th>P</th><th>S</th>
-      <th>Gf</th><th>Gs</th><th>DR</th><th>Pts</th>
-    </tr></thead><tbody>`;
+function stTableHTML(rows) {
+  const medals = ['🥇', '🥈', '🥉'];
+  let h = `<table class="st"><thead><tr>
+    <th>Pos</th><th class="nm" style="text-align:left">Nome</th>
+    <th>PG</th><th>V</th><th>P</th><th>S</th>
+    <th>Gf</th><th>Gs</th><th>DR</th><th>Pts</th>
+  </tr></thead><tbody>`;
 
   rows.forEach((r, i) => {
     const dr  = r.gf - r.gs;
-    const drs = dr > 0 ? '+' + dr : dr;
+    const drs = dr >= 0 ? ('+' + dr) : '' + dr;
     const rc  = i < 3 ? 'r' + (i + 1) : '';
     const bk  = i < 3 ? medals[i] : (i + 1);
     h += `<tr class="${rc}">
@@ -710,29 +749,39 @@ function renderStandings() {
       <td><strong>${r.pts}</strong></td>
     </tr>`;
   });
-  h += '</tbody></table>';
-  document.getElementById('standings-container').innerHTML = h;
+  return h + '</tbody></table>';
 }
 
-// ────────────────────────────────────────────────────────
-//  WINNER
-// ────────────────────────────────────────────────────────
+function renderStandings() {
+  // Ricostruisce l'intera classifica da zero ad ogni chiamata
+  document.getElementById('standings-wrap').innerHTML = stTableHTML(computeStandings());
+}
+
+// ============================================================
+//  SCHERMATA 3 — VINCITORE
+// ============================================================
 function showWinner() {
-  const s = standings();
-  document.getElementById('w-name').textContent  = s[0].name;
+  const rows = computeStandings();
+  const w    = rows[0];
+
+  document.getElementById('w-name').textContent  = w.name;
   document.getElementById('w-event').textContent = S.name;
 
-  // Build podium: 2nd | 1st | 3rd
+  // Podio: 2° | 1° | 3°
   const order = [
-    { data: s[1], cls: 'pod2', lbl: '2°' },
-    { data: s[0], cls: 'pod1', lbl: '1°' },
-    { data: s[2], cls: 'pod3', lbl: '3°' },
+    { d: rows[1], cls: 'pod2', lbl: '2°' },
+    { d: rows[0], cls: 'pod1', lbl: '1°' },
+    { d: rows[2], cls: 'pod3', lbl: '3°' },
   ];
-  document.getElementById('podium').innerHTML = order.map(pl => `
-    <div class="podium-place ${pl.cls}">
-      <div class="pod-name">${pl.data ? pl.data.name : '—'}</div>
-      <div class="pod-block">${pl.lbl}</div>
+  document.getElementById('podium').innerHTML = order.map(p => `
+    <div class="pod-pl ${p.cls}">
+      <div class="pod-name">${p.d ? p.d.name : '—'}</div>
+      <div class="pod-pts">${p.d ? p.d.pts + ' pt' : ''}</div>
+      <div class="pod-blk">${p.lbl}</div>
     </div>`).join('');
+
+  // Classifica finale completa
+  document.getElementById('winner-st').innerHTML = stTableHTML(rows);
 
   showScreen('winner');
   launchConfetti();
@@ -741,43 +790,51 @@ function showWinner() {
 function launchConfetti() {
   const box    = document.getElementById('confetti-box');
   box.innerHTML = '';
-  const colors = ['#ffd700','#00e676','#ff6b6b','#74b9ff','#fd79a8','#a29bfe','#fff'];
+  const colors = ['#ffd700','#00ff88','#ff6b6b','#74b9ff','#fd79a8','#a29bfe','#ffffff'];
   for (let i = 0; i < 90; i++) {
     const el = document.createElement('div');
     el.className = 'bit';
-    const size = 6 + Math.random() * 9;
-    el.style.cssText = `
-      left: ${Math.random() * 100}vw;
-      width: ${size}px; height: ${size}px;
-      background: ${colors[Math.floor(Math.random() * colors.length)]};
-      border-radius: ${Math.random() > .45 ? '50%' : '2px'};
-      animation-duration: ${2.5 + Math.random() * 3}s;
-      animation-delay:    ${Math.random() * 5}s;
-      opacity: ${0.7 + Math.random() * 0.3};
-    `;
+    const sz = 6 + Math.random() * 9;
+    Object.assign(el.style, {
+      left:              (Math.random() * 100) + 'vw',
+      width:             sz + 'px',
+      height:            sz + 'px',
+      background:        colors[Math.floor(Math.random() * colors.length)],
+      borderRadius:      Math.random() > .45 ? '50%' : '2px',
+      animationDuration: (2.5 + Math.random() * 3.5) + 's',
+      animationDelay:    (Math.random() * 7) + 's',
+      opacity:           (.65 + Math.random() * .35),
+    });
     box.appendChild(el);
   }
 }
 
-// ────────────────────────────────────────────────────────
-//  PERSISTENCE
-// ────────────────────────────────────────────────────────
-function save() { localStorage.setItem(LS_KEY, JSON.stringify(S)); }
-
+// ============================================================
+//  RESET / NUOVO TORNEO
+// ============================================================
 function onReset() {
   if (!confirm('Resettare il torneo? Tutti i dati andranno persi.')) return;
-  onNewTournament();
+  clearAndGoSetup();
 }
 
 function onNewTournament() {
-  S = null;
-  localStorage.removeItem(LS_KEY);
-  document.getElementById('inp-name').value  = '';
-  document.getElementById('setup-err').style.display = 'none';
-  document.getElementById('sel-n').value     = '4';
-  buildPlayerFields();
+  if (!confirm('Iniziare un nuovo torneo? I risultati andranno persi.')) return;
+  clearAndGoSetup();
+}
+
+function clearAndGoSetup() {
+  S = null; localStorage.removeItem(LS);
+  document.getElementById('inp-tname').value = '';
+  document.getElementById('setup-err').textContent = '';
+  document.getElementById('sel-n').value = '4';
+  buildFields();
   showScreen('setup');
 }
+
+// ============================================================
+//  PERSISTENZA localStorage
+// ============================================================
+function save() { localStorage.setItem(LS, JSON.stringify(S)); }
 </script>
 </body>
 </html>
