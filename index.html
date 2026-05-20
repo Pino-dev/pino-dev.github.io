@@ -239,7 +239,29 @@ footer {
 
   <!-- Card 1: Round Robin (attiva) -->
   <a class="card card-active" href="roundrobin.html">
-    <div class="card-icon">⚽</div>
+    <div class="card-icon">
+      <!-- K5: grafo completo su 5 nodi ai vertici di un pentagono -->
+      <!-- Centro (40,40), raggio 28 — N0(40,12) N1(66.6,31.4) N2(56.5,62.6) N3(23.5,62.6) N4(13.4,31.4) -->
+      <svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto 1rem">
+        <!-- 10 archi (prima dei nodi per z-order) -->
+        <line x1="40"  y1="12"   x2="66.6" y2="31.4" stroke="#00ff88" stroke-width="1.5" stroke-opacity="0.4"/>
+        <line x1="40"  y1="12"   x2="56.5" y2="62.6" stroke="#00ff88" stroke-width="1.5" stroke-opacity="0.4"/>
+        <line x1="40"  y1="12"   x2="23.5" y2="62.6" stroke="#00ff88" stroke-width="1.5" stroke-opacity="0.4"/>
+        <line x1="40"  y1="12"   x2="13.4" y2="31.4" stroke="#00ff88" stroke-width="1.5" stroke-opacity="0.4"/>
+        <line x1="66.6" y1="31.4" x2="56.5" y2="62.6" stroke="#00ff88" stroke-width="1.5" stroke-opacity="0.4"/>
+        <line x1="66.6" y1="31.4" x2="23.5" y2="62.6" stroke="#00ff88" stroke-width="1.5" stroke-opacity="0.4"/>
+        <line x1="66.6" y1="31.4" x2="13.4" y2="31.4" stroke="#00ff88" stroke-width="1.5" stroke-opacity="0.4"/>
+        <line x1="56.5" y1="62.6" x2="23.5" y2="62.6" stroke="#00ff88" stroke-width="1.5" stroke-opacity="0.4"/>
+        <line x1="56.5" y1="62.6" x2="13.4" y2="31.4" stroke="#00ff88" stroke-width="1.5" stroke-opacity="0.4"/>
+        <line x1="23.5" y1="62.6" x2="13.4" y2="31.4" stroke="#00ff88" stroke-width="1.5" stroke-opacity="0.4"/>
+        <!-- 5 nodi -->
+        <circle cx="40"   cy="12"   r="6" fill="#00ff88"/>
+        <circle cx="66.6" cy="31.4" r="6" fill="#00ff88"/>
+        <circle cx="56.5" cy="62.6" r="6" fill="#00ff88"/>
+        <circle cx="23.5" cy="62.6" r="6" fill="#00ff88"/>
+        <circle cx="13.4" cy="31.4" r="6" fill="#00ff88"/>
+      </svg>
+    </div>
     <div class="card-title">ALL'ITALIANA</div>
     <div class="card-sub">Round Robin</div>
     <p class="card-desc">Tutti contro tutti.</p>
@@ -249,7 +271,43 @@ footer {
   <!-- Card 2: Knockout (disabilitata) -->
   <div class="card card-disabled">
     <div class="badge-soon">Coming Soon</div>
-    <div class="card-icon">🥊</div>
+    <div class="card-icon">
+      <!-- Bracket 8 giocatori, 3 round — y slot: 5,15,25,35,45,55,65,75 -->
+      <!-- midpoint R1: 10,30,50,70 | R2: 20,60 | Finale: 40 -->
+      <svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto 1rem">
+        <!-- Round 1: 8 linee orizzontali (slot giocatori) -->
+        <line x1="4" y1="5"  x2="22" y2="5"  stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <line x1="4" y1="15" x2="22" y2="15" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <line x1="4" y1="25" x2="22" y2="25" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <line x1="4" y1="35" x2="22" y2="35" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <line x1="4" y1="45" x2="22" y2="45" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <line x1="4" y1="55" x2="22" y2="55" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <line x1="4" y1="65" x2="22" y2="65" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <line x1="4" y1="75" x2="22" y2="75" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <!-- Round 1: 4 connettori verticali (coppie) -->
+        <line x1="22" y1="5"  x2="22" y2="15" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22" y1="25" x2="22" y2="35" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22" y1="45" x2="22" y2="55" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22" y1="65" x2="22" y2="75" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <!-- Round 2: 4 linee orizzontali (ai midpoint R1) -->
+        <line x1="22" y1="10" x2="46" y2="10" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22" y1="30" x2="46" y2="30" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22" y1="50" x2="46" y2="50" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22" y1="70" x2="46" y2="70" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <!-- Round 2: 2 connettori verticali -->
+        <line x1="46" y1="10" x2="46" y2="30" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <line x1="46" y1="50" x2="46" y2="70" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <!-- Finale: 2 linee orizzontali (ai midpoint R2) -->
+        <line x1="46" y1="20" x2="64" y2="20" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <line x1="46" y1="60" x2="64" y2="60" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <!-- Finale: 1 connettore verticale (midpoint=40) -->
+        <line x1="64" y1="20" x2="64" y2="60" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <!-- Connettore al vincitore -->
+        <line x1="64" y1="40" x2="69" y2="40" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+        <!-- Stella vincitore (centro 73,40 r_ext=4 r_int=1.7) -->
+        <path d="M73,36 L74,38.6 L76.8,38.8 L74.6,40.5 L75.4,43.2 L73,41.7 L70.6,43.2 L71.4,40.5 L69.2,38.8 L72,38.6 Z" fill="#ffd700"/>
+      </svg>
+    </div>
     <div class="card-title">ELIMINAZIONE</div>
     <div class="card-sub">Knockout</div>
     <p class="card-desc">Perdi ed esci. Solo il migliore sopravvive.</p>
