@@ -722,12 +722,13 @@ function computeStandings() {
     else                           { A.p++; B.p++; A.pts++; B.pts++; }
   }));
 
-  // 3. Ordina: Punti → DR → Gf → alfabetico
+  // 3. Ordina: PTS → V → DR → GF → alfabetico
   return Object.values(idx).sort((a, b) => {
     if (b.pts !== a.pts) return b.pts - a.pts;
+    if (b.v   !== a.v)   return b.v   - a.v;
     const da = a.gf - a.gs, db = b.gf - b.gs;
-    if (db !== da) return db - da;
-    if (b.gf  !== a.gf)  return b.gf - a.gf;
+    if (db !== da)       return db - da;
+    if (b.gf  !== a.gf)  return b.gf  - a.gf;
     return a.name.localeCompare(b.name);
   });
 }
