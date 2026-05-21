@@ -717,15 +717,14 @@ function computeStandings() {
     A.pg++; B.pg++;
     A.gf += m.scoreA; A.gs += m.scoreB;
     B.gf += m.scoreB; B.gs += m.scoreA;
-    if      (m.scoreA > m.scoreB) { A.v++; A.pts += 3; B.s++; }
-    else if (m.scoreA < m.scoreB) { B.v++; B.pts += 3; A.s++; }
-    else                           { A.p++; B.p++; A.pts++; B.pts++; }
+    if      (m.scoreA > m.scoreB) { A.v++; A.pts++; B.s++; }
+    else if (m.scoreA < m.scoreB) { B.v++; B.pts++; A.s++; }
+    else                           { A.p++; B.p++; }
   }));
 
-  // 3. Ordina: PTS → V → DR → GF → alfabetico
+  // 3. Ordina: PTS (=V) → DR → GF → alfabetico
   return Object.values(idx).sort((a, b) => {
     if (b.pts !== a.pts) return b.pts - a.pts;
-    if (b.v   !== a.v)   return b.v   - a.v;
     const da = a.gf - a.gs, db = b.gf - b.gs;
     if (db !== da)       return db - da;
     if (b.gf  !== a.gf)  return b.gf  - a.gf;
