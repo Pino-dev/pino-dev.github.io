@@ -287,6 +287,8 @@ body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--t
 .w-runner span { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 2px; }
 .w-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 
+.print-bracket { display: none; }
+
 .confetti-box { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
 .bit { position: absolute; top: -24px; border-radius: 2px; animation: cfall linear infinite; }
 @keyframes cfall { to { transform: translateY(110vh) rotate(760deg); opacity: 0; } }
@@ -320,7 +322,8 @@ body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--t
   .round-label { color: #555; border-color: #ccc; }
 
   /* Vincitore */
-  #screen-winner { justify-content: center; padding: 40px 20px; }
+  #screen-winner { justify-content: flex-start; padding: 30px 20px; overflow: visible; height: auto; }
+  .w-inner { margin-bottom: 28px; }
   .trophy-ico { animation: none !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   .w-label { color: #555 !important; }
   .w-event { color: #555 !important; }
@@ -328,6 +331,25 @@ body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--t
   .w-runner { color: #333 !important; }
   .w-runner span { color: #555 !important; }
   .w-btns { display: none !important; }
+
+  /* Tabellone sotto il vincitore */
+  .print-bracket {
+    display: block !important;
+    width: 100%; overflow: visible;
+    border-top: 2px solid #000; padding-top: 20px; margin-top: 4px;
+  }
+  .print-bracket .bracket { width: 100%; min-width: 0; flex-wrap: wrap; }
+  .print-bracket .bracket-col { min-width: 120px; flex: 1; }
+  .print-bracket .round-label { color: #555; border-color: #ccc; }
+  .print-bracket .match-card { background: #fff !important; border: 1px solid #ccc !important; break-inside: avoid; }
+  .print-bracket .match-card.played { background: #f0fff4 !important; }
+  .print-bracket .mc-player { color: #000; }
+  .print-bracket .mc-player.winner .mc-name { color: #000 !important; font-weight: 800; }
+  .print-bracket .mc-player.loser { opacity: .55; }
+  .print-bracket .mc-score { color: #555 !important; }
+  .print-bracket .match-slot::before,
+  .print-bracket .match-slot::after { border-color: #ccc; }
+  .print-bracket .match-pair::after { border-color: #ccc; }
 }
 </style>
 </head>
@@ -460,6 +482,7 @@ body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--t
       <button class="btn btn-primary"   onclick="newTournament()">Nuovo Torneo</button>
     </div>
   </div>
+  <div id="print-bracket" class="print-bracket"></div>
 </div>
 
 <script>
@@ -725,12 +748,15 @@ function showBracketScreen() {
 }
 
 function showWinnerScreen(champion) {
-  // Find runner-up (loser of final)
   const fin = S.bracket[S.numRounds - 1][0];
   const runner = (fin.winner === fin.a) ? fin.b : fin.a;
   document.getElementById('w-champion').textContent = champion;
   document.getElementById('w-event-name').textContent = S.name.toUpperCase();
   document.getElementById('w-runner').textContent = runner || '';
+  // Copia il tabellone nel div di stampa (visibile solo in @media print)
+  renderBracket();
+  document.getElementById('print-bracket').innerHTML =
+    document.getElementById('bracket-wrap').innerHTML;
   spawnConfetti();
   showScreen('screen-winner');
 }
