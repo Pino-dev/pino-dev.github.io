@@ -379,7 +379,7 @@ body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--t
     </div>
 
     <div class="fg">
-      <label>Numero di giocatori</label>
+      <label>Numero di squadre</label>
       <select id="sel-n" onchange="buildFields()"></select>
     </div>
 
@@ -508,8 +508,8 @@ function buildFields() {
   for (let i = 1; i <= n; i++) {
     grid.innerHTML += `
       <div class="pf">
-        <label>Giocatore ${i}</label>
-        <input type="text" placeholder="Nome…" maxlength="20" data-pi="${i}"/>
+        <label>Squadra ${i}</label>
+        <input type="text" placeholder="Nome squadra…" maxlength="20" data-pi="${i}"/>
       </div>`;
   }
   const c = document.getElementById('players-fields');
@@ -529,14 +529,14 @@ function onStart() {
     if (!v) { inp.classList.add('err'); ok = false; return; }
     if (seen.has(v.toLowerCase())) {
       inp.classList.add('err'); ok = false;
-      errEl.textContent = 'Nomi duplicati: ogni giocatore deve avere un nome univoco.';
+      errEl.textContent = 'Nomi duplicati: ogni squadra deve avere un nome univoco.';
       return;
     }
     seen.add(v.toLowerCase()); names.push(v);
   });
 
   if (!ok) {
-    if (!errEl.textContent) errEl.textContent = 'Compila tutti i campi giocatore.';
+    if (!errEl.textContent) errEl.textContent = 'Compila tutti i campi squadra.';
     return;
   }
 
