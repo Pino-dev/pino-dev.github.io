@@ -305,16 +305,29 @@ body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--t
   .screen.active { display: flex !important; }
   .bracket-body { overflow: visible; }
   .btn, .hdr-right, .confetti-box, .modal-bg { display: none !important; }
+
+  /* Bracket */
   .game-hdr { background: #fff; border-bottom: 2px solid #000; }
   .game-hdr h1 { color: #000; }
   .match-card { background: #fff !important; border: 1px solid #ccc !important; break-inside: avoid; }
   .match-card.played { background: #f0fff4 !important; }
   .mc-player { color: #000; }
   .mc-player.winner .mc-name { color: #000 !important; font-weight: 800; }
+  .mc-player.loser { opacity: .55; }
+  .mc-score { color: #555 !important; }
   .match-slot::before, .match-slot::after { border-color: #ccc; }
   .match-pair::after { border-color: #ccc; }
-  .w-name { color: #000 !important; text-shadow: none !important; animation: none !important; }
-  .trophy-ico { animation: none !important; }
+  .round-label { color: #555; border-color: #ccc; }
+
+  /* Vincitore */
+  #screen-winner { justify-content: center; padding: 40px 20px; }
+  .trophy-ico { animation: none !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .w-label { color: #555 !important; }
+  .w-event { color: #555 !important; }
+  .w-name  { color: #000 !important; text-shadow: none !important; animation: none !important; font-size: 3.5rem; }
+  .w-runner { color: #333 !important; }
+  .w-runner span { color: #555 !important; }
+  .w-btns { display: none !important; }
 }
 </style>
 </head>
@@ -759,8 +772,7 @@ function newTournament() {
   showScreen('screen-setup');
 }
 function printBracket() {
-  showScreen('screen-bracket');
-  setTimeout(() => window.print(), 150);
+  window.print();
 }
 
 /* ── INIT ── */
