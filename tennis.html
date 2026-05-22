@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Torneo di Tennis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ── VARIABILI ────────────────────────────────────────────── */
+:root {
+  --bg:     #0f1117;
+  --surf:   #1a1d27;
+  --surf2:  #22263a;
+  --accent: #00ff88;
+  --gold:   #ffd700;
+  --silver: #c0c0c0;
+  --bronze: #cd7f32;
+  --text:   #e8eaf0;
+  --muted:  #6b7280;
+  --danger: #ef4444;
+  --ok-bg:  #081a0e;
+  --ok-bdr: #00ff88;
+  --ft: 'Barlow Condensed', system-ui, sans-serif;
+  --fm: 'DM Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); }
+
+.screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  opacity: 0; pointer-events: none;
+  transform: translateY(14px);
+  transition: opacity .3s ease, transform .3s ease;
+}
+.screen.active { opacity: 1; pointer-events: all; transform: none; }
+.no-trans .screen { transition: none !important; }
+
+.modal-bg {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,.78);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.modal-bg.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--surf); border: 1px solid var(--surf2);
+  border-radius: 14px; padding: 32px 28px;
+  max-width: 380px; width: 92%; text-align: center;
+}
+.modal-box h3 {
+  font-family: var(--ft); font-size: 1.5rem; font-weight: 800;
+  color: var(--accent); margin-bottom: 10px;
+}
+.modal-box p { color: var(--muted); font-size: .9rem; line-height: 1.5; margin-bottom: 24px; }
+.modal-btns { display: flex; gap: 10px; justify-content: center; }
+
+.btn {
+  font-family: inherit; font-size: .875rem; font-weight: 600;
+  padding: 9px 22px; border-radius: 8px; border: none;
+  cursor: pointer; white-space: nowrap;
+  transition: background .18s, transform .12s, opacity .18s;
+}
+.btn:active { transform: scale(.97); }
+.btn-primary   { background: var(--accent); color: #000; }
+.btn-primary:hover { background: #1fffa0; }
+.btn-secondary { background: var(--surf2); color: var(--text); }
+.btn-secondary:hover { background: #2d3148; }
+.btn-danger    { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+.btn-danger:hover { background: var(--danger); color: #fff; }
+.btn-sm { padding: 5px 12px; font-size: .78rem; }
+
+/* ── SETUP ─────────────────────────────────────────────────── */
+#screen-setup {
+  align-items: center; justify-content: flex-start;
+  overflow-y: auto; padding: 60px 16px 48px;
+}
+.setup-card {
+  background: var(--surf); border: 1px solid var(--surf2);
+  border-radius: 14px; padding: 36px 40px;
+  width: 100%; max-width: 480px;
+}
+.setup-title {
+  font-family: var(--ft); font-size: 2.2rem; font-weight: 800;
+  color: var(--accent); letter-spacing: 1px;
+  text-align: center; margin-bottom: 28px;
+}
+.fg { margin-bottom: 18px; }
+.fg label {
+  display: block; font-size: .7rem; font-weight: 700;
+  color: var(--muted); text-transform: uppercase;
+  letter-spacing: .9px; margin-bottom: 6px;
+}
+.fg input, .fg select {
+  width: 100%; padding: 10px 14px;
+  background: var(--surf2); border: 1px solid #2d3148;
+  border-radius: 8px; color: var(--text);
+  font-family: inherit; font-size: .95rem; transition: border-color .2s;
+}
+.fg input:focus, .fg select:focus { outline: none; border-color: var(--accent); }
+.fg input.err { border-color: var(--danger); }
+.players-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+.pf { display: flex; flex-direction: column; gap: 4px; }
+.pf label { font-size: .68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .7px; }
+.pf input {
+  padding: 8px 12px; background: var(--surf2); border: 1px solid #2d3148;
+  border-radius: 8px; color: var(--text); font-family: inherit; font-size: .9rem; transition: border-color .2s;
+}
+.pf input:focus { outline: none; border-color: var(--accent); }
+.pf input.err   { border-color: var(--danger); }
+.err-msg { color: var(--danger); font-size: .8rem; min-height: 1.2em; margin-bottom: 12px; }
+
+/* ── SCHERMATA 2 ───────────────────────────────────────────── */
+#screen-game { overflow: hidden; }
+
+.game-hdr {
+  flex-shrink: 0; background: var(--surf); border-bottom: 2px solid var(--accent);
+  padding: 10px 18px; display: flex; align-items: center; gap: 12px; z-index: 10;
+}
+.game-hdr h1 {
+  font-family: var(--ft); font-size: 1.5rem; font-weight: 800;
+  color: var(--accent); letter-spacing: 1px;
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hdr-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.prog-txt  { font-family: var(--fm); font-size: .75rem; color: var(--muted); }
+
+.game-body { flex: 1; display: flex; overflow: hidden; }
+.matches-panel { flex: 7; overflow-y: auto; padding: 18px 20px; border-right: 1px solid var(--surf2); }
+.standings-panel { flex: 3; overflow-y: auto; padding: 18px 16px; background: var(--surf); }
+
+.panel-title {
+  font-family: var(--ft); font-size: 1.15rem; font-weight: 700;
+  color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;
+}
+.prog-bar-wrap { height: 4px; background: var(--surf2); border-radius: 2px; margin-bottom: 16px; overflow: hidden; }
+.prog-bar      { height: 100%; background: var(--accent); border-radius: 2px; transition: width .45s ease; }
+
+.round-block { margin-bottom: 22px; }
+.round-lbl {
+  font-family: var(--ft); font-size: .78rem; font-weight: 700;
+  color: var(--muted); text-transform: uppercase; letter-spacing: 1.4px;
+  padding-bottom: 6px; margin-bottom: 8px; border-bottom: 1px solid var(--surf2);
+}
+
+/* ── RIGA PARTITA ──────────────────────────────────────────── */
+.match-row {
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  align-items: center; column-gap: 10px;
+  padding: 8px 10px; background: var(--surf); border: 1px solid var(--surf2);
+  border-radius: 8px; margin-bottom: 6px; transition: background .22s, border-color .22s;
+}
+.match-row.played  { background: var(--ok-bg); border-color: var(--ok-bdr); }
+.match-row.invalid { border-color: var(--danger) !important; }
+.match-row.bye-row { opacity: .3; pointer-events: none; }
+
+.mn-a { text-align: right; font-size: .85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mn-b { text-align: left;  font-size: .85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.score-area { display: flex; align-items: center; gap: 5px; }
+.score-area input {
+  width: 44px; text-align: center;
+  font-family: var(--fm); font-size: .95rem; font-weight: 500;
+  padding: 5px 3px; background: var(--surf2); border: 1px solid #2d3148;
+  border-radius: 6px; color: var(--text); transition: border-color .2s;
+  -moz-appearance: textfield;
+}
+.score-area input::-webkit-outer-spin-button,
+.score-area input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.score-area input:focus { outline: none; border-color: var(--accent); }
+
+/* separatore con etichetta "set" */
+.score-sep-wrap { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.score-sep     { font-family: var(--fm); color: var(--muted); user-select: none; line-height: 1; }
+.score-set-lbl { font-size: .5rem; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; line-height: 1; }
+
+/* ── TABELLA CLASSIFICA ────────────────────────────────────── */
+.st { width: 100%; border-collapse: collapse; font-size: .75rem; }
+.st th {
+  font-family: var(--ft); font-size: .68rem; font-weight: 700;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .7px;
+  padding: 5px 2px; text-align: center; border-bottom: 1px solid var(--surf2);
+}
+.st td {
+  font-family: var(--fm); padding: 7px 2px; text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.st td.nm {
+  font-family: system-ui,sans-serif; text-align: left; font-weight: 600; font-size: .78rem;
+  max-width: 85px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.st tr:last-child td { border-bottom: none; }
+.st tr.r1 { background: rgba(255,215,0,.1); }
+.st tr.r2 { background: rgba(192,192,192,.06); }
+.st tr.r3 { background: rgba(205,127,50,.06); }
+.rbadge { font-size: .85rem; font-weight: 700; }
+.r1 .rbadge { color: var(--gold); }
+.r2 .rbadge { color: var(--silver); }
+.r3 .rbadge { color: var(--bronze); }
+
+/* ── VINCITORE ─────────────────────────────────────────────── */
+#screen-winner {
+  align-items: center; justify-content: flex-start;
+  overflow-y: auto; padding: 36px 16px 48px; text-align: center;
+}
+.w-inner {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%; max-width: 540px; margin: 0 auto;
+}
+.trophy-ico { font-size: 4.5rem; display: block; animation: rock 2.5s ease-in-out infinite; margin-bottom: 10px; }
+@keyframes rock { 0%,100%{transform:rotate(-7deg) scale(1)} 50%{transform:rotate(7deg) scale(1.06)} }
+.w-label { font-family: var(--ft); font-size: 1rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 4px; }
+.w-event { font-family: var(--ft); font-size: .9rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+.w-name  {
+  font-family: var(--ft); font-size: clamp(2.6rem, 9vw, 5rem);
+  font-weight: 800; color: var(--gold); line-height: 1.1; margin-bottom: 28px;
+  animation: glow 2s ease-in-out infinite;
+}
+@keyframes glow { 0%,100%{text-shadow:0 0 18px rgba(255,215,0,.4)} 50%{text-shadow:0 0 42px rgba(255,215,0,.95)} }
+.podium { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 28px; }
+.pod-pl { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.pod-name { font-family: var(--ft); font-size: .9rem; font-weight: 700; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pod-pts  { font-family: var(--fm); font-size: .72rem; color: var(--muted); }
+.pod-blk  {
+  width: 82px; border-radius: 8px 8px 0 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--ft); font-size: 1.5rem; font-weight: 800; color: #000;
+}
+.pod1 .pod-blk { height: 100px; background: var(--gold); }
+.pod2 .pod-blk { height: 72px;  background: var(--silver); }
+.pod3 .pod-blk { height: 52px;  background: var(--bronze); }
+.winner-st { margin: 8px 0 28px; width: 100%; }
+.w-btns    { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.confetti-box { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.bit { position: absolute; top: -24px; border-radius: 2px; animation: cfall linear infinite; }
+@keyframes cfall { to { transform: translateY(110vh) rotate(760deg); opacity: 0; } }
+
+/* ── RESPONSIVE ────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  #screen-game     { overflow-y: auto; }
+  .game-body       { flex-direction: column; overflow: visible; height: auto; }
+  .matches-panel   { flex: none; overflow: visible; border-right: none; border-bottom: 1px solid var(--surf2); }
+  .standings-panel { flex: none; overflow: visible; }
+  .setup-card      { padding: 24px 18px; }
+  .players-grid    { grid-template-columns: 1fr; }
+  .mn-a, .mn-b     { font-size: .78rem; }
+  .score-area input { width: 38px; }
+  .pod-blk         { width: 68px; }
+}
+
+/* ── STAMPA ────────────────────────────────────────────────── */
+@media print {
+  html, body { height: auto; overflow: visible; background: #fff; color: #000; }
+  .screen { position: static !important; opacity: 1 !important; transform: none !important; pointer-events: all !important; display: none !important; overflow: visible !important; height: auto !important; }
+  .screen.active { display: flex !important; }
+  .game-body       { flex-direction: column; overflow: visible; height: auto; }
+  .matches-panel   { flex: none; overflow: visible; height: auto; border: none; }
+  .standings-panel { flex: none; overflow: visible; height: auto; background: #fff; }
+  .btn, .btn-ic, .hdr-right, .prog-bar-wrap, .confetti-box, .modal-bg { display: none !important; }
+  .game-hdr { background: #fff; border-bottom: 2px solid #000; }
+  .game-hdr h1 { color: #000; }
+  .match-row { background: #fff !important; border: 1px solid #ccc !important; break-inside: avoid; }
+  .match-row.played { background: #f0fff4 !important; }
+  .score-area input { background: transparent; border: none; color: #000; }
+  .mn-a, .mn-b, .score-sep { color: #000; }
+  .score-set-lbl { color: #555; }
+  .round-lbl { color: #555; border-color: #ccc; }
+  .panel-title { color: #000; }
+  .st th { color: #555; border-color: #ccc; }
+  .st td { color: #000; }
+  .st tr.r1 { background: #fffde7 !important; }
+  .st tr.r2 { background: #f5f5f5 !important; }
+  .st tr.r3 { background: #fff3e0 !important; }
+  .rbadge   { font-size: .75rem; }
+  .w-name   { color: #000 !important; text-shadow: none !important; animation: none !important; }
+  .w-label, .w-event, .pod-pts { color: #555 !important; }
+  .trophy-ico { animation: none !important; }
+  .pod1 .pod-blk, .pod2 .pod-blk, .pod3 .pod-blk { color: #000; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .w-btns { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ MODAL RIPRENDI TORNEO ═════════════════════════════════ -->
+<div class="modal-bg" id="modal-resume">
+  <div class="modal-box">
+    <h3>Torneo in corso</h3>
+    <p id="modal-msg"></p>
+    <div class="modal-btns">
+      <button class="btn btn-primary"   onclick="onResumeYes()">Sì, riprendi</button>
+      <button class="btn btn-secondary" onclick="onResumeNo()">No, nuovo torneo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCHERMATA 1: SETUP ════════════════════════════════════ -->
+<div id="screen-setup" class="screen">
+  <div class="setup-card">
+    <div class="setup-title">
+      <svg width="48" height="48" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;margin-right:.4rem">
+        <!-- pallina da tennis: cerchio + cucitura a S -->
+        <circle cx="40" cy="40" r="33" fill="#00ff88" fill-opacity="0.06" stroke="#00ff88" stroke-width="2"/>
+        <path d="M40,7 C56,18 56,35 40,40 C24,45 24,62 40,73"
+          fill="none" stroke="#00ff88" stroke-width="1.8" stroke-opacity="0.75"/>
+        <path d="M40,7 C24,18 24,35 40,40 C56,45 56,62 40,73"
+          fill="none" stroke="#00ff88" stroke-width="1.8" stroke-opacity="0.75"/>
+        <circle cx="40" cy="40" r="3" fill="#00ff88"/>
+      </svg>
+      TENNIS
+    </div>
+
+    <div class="fg">
+      <label>Nome del torneo</label>
+      <input id="inp-tname" type="text" placeholder="es. Open di Quartiere" maxlength="40"/>
+    </div>
+
+    <div class="fg">
+      <label>Numero di giocatori</label>
+      <select id="sel-n" onchange="buildFields()"></select>
+    </div>
+
+    <div id="players-fields"></div>
+    <p class="err-msg" id="setup-err"></p>
+
+    <button class="btn btn-primary"
+      style="width:100%;padding:13px;font-size:1.05rem;letter-spacing:.5px"
+      onclick="onStart()">Inizia Torneo →</button>
+    <div style="text-align:center;margin-top:14px">
+      <a href="index.html" style="color:var(--muted);font-size:.8rem;text-decoration:none">← Torna all'homepage</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCHERMATA 2: PARTITE + CLASSIFICA ════════════════════ -->
+<div id="screen-game" class="screen">
+  <header class="game-hdr">
+    <h1 id="hdr-title">TORNEO</h1>
+    <div class="hdr-right">
+      <span class="prog-txt" id="hdr-prog"></span>
+      <button class="btn btn-sm btn-secondary" onclick="window.print()">🖨 Stampa</button>
+      <button class="btn btn-sm btn-danger"    onclick="onReset()">↺ Reset</button>
+    </div>
+  </header>
+
+  <div class="game-body">
+    <div class="matches-panel">
+      <div class="panel-title">Partite</div>
+      <div class="prog-bar-wrap"><div class="prog-bar" id="prog-bar"></div></div>
+      <div id="rounds-wrap"></div>
+    </div>
+    <div class="standings-panel">
+      <div class="panel-title">Classifica</div>
+      <div id="standings-wrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCHERMATA 3: VINCITORE ════════════════════════════════ -->
+<div id="screen-winner" class="screen">
+  <div class="confetti-box" id="confetti-box"></div>
+  <div class="w-inner">
+    <span class="trophy-ico">🏆</span>
+    <div class="w-label">Campione del Torneo</div>
+    <div class="w-event" id="w-event"></div>
+    <div class="w-name"  id="w-name"></div>
+    <div class="podium"  id="podium"></div>
+    <div class="winner-st" id="winner-st"></div>
+    <div class="w-btns">
+      <button class="btn btn-secondary" onclick="window.print()">🖨 Stampa risultati</button>
+      <button class="btn btn-primary"   onclick="onNewTournament()">🔄 Nuovo Torneo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LS  = 'tennis_v1';
+const BYE = '__BYE__';
+let S = null;
+
+// ── AVVIO ────────────────────────────────────────────────────
+(function boot() {
+  const sel = document.getElementById('sel-n');
+  for (let i = 2; i <= 16; i++) {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = i;
+    if (i === 4) o.selected = true;
+    sel.appendChild(o);
+  }
+  buildFields();
+
+  try {
+    const raw = localStorage.getItem(LS);
+    if (raw) {
+      S = JSON.parse(raw);
+      document.getElementById('modal-msg').textContent =
+        `Vuoi riprendere il torneo "${S.name}"?`;
+      showScreen('setup', false);
+      document.getElementById('modal-resume').classList.add('open');
+      return;
+    }
+  } catch { localStorage.removeItem(LS); }
+
+  showScreen('setup', false);
+})();
+
+// ── SCHERMATE ────────────────────────────────────────────────
+function showScreen(id, animate = true) {
+  if (!animate) document.body.classList.add('no-trans');
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  if (!animate) { void document.body.offsetHeight; document.body.classList.remove('no-trans'); }
+}
+
+// ── MODAL RESUME ─────────────────────────────────────────────
+function onResumeYes() {
+  document.getElementById('modal-resume').classList.remove('open');
+  showScreen('game'); renderGame();
+}
+function onResumeNo() {
+  document.getElementById('modal-resume').classList.remove('open');
+  S = null; localStorage.removeItem(LS); showScreen('setup');
+}
+
+// ── SETUP ────────────────────────────────────────────────────
+function buildFields() {
+  const n = +document.getElementById('sel-n').value;
+  const grid = document.createElement('div');
+  grid.className = 'players-grid';
+  for (let i = 1; i <= n; i++) {
+    grid.innerHTML += `
+      <div class="pf">
+        <label>Giocatore ${i}</label>
+        <input type="text" placeholder="Nome…" maxlength="20" data-pi="${i}"/>
+      </div>`;
+  }
+  const c = document.getElementById('players-fields');
+  c.innerHTML = ''; c.appendChild(grid);
+}
+
+function onStart() {
+  const errEl = document.getElementById('setup-err');
+  errEl.textContent = '';
+  document.querySelectorAll('[data-pi]').forEach(i => i.classList.remove('err'));
+
+  const inputs = [...document.querySelectorAll('[data-pi]')];
+  const names = []; const seen = new Set(); let ok = true;
+
+  inputs.forEach(inp => {
+    const v = inp.value.trim();
+    if (!v) { inp.classList.add('err'); ok = false; return; }
+    if (seen.has(v.toLowerCase())) {
+      inp.classList.add('err'); ok = false;
+      errEl.textContent = 'Nomi duplicati: ogni giocatore deve avere un nome univoco.';
+      return;
+    }
+    seen.add(v.toLowerCase()); names.push(v);
+  });
+
+  if (!ok) {
+    if (!errEl.textContent) errEl.textContent = 'Compila tutti i campi giocatore.';
+    return;
+  }
+
+  let players = [...names]; let hasBye = false;
+  if (players.length % 2 !== 0) { players.push(BYE); hasBye = true; }
+
+  S = {
+    name:    document.getElementById('inp-tname').value.trim() || 'Torneo',
+    players, hasBye,
+    rounds:  circleRoundRobin(players.length)
+  };
+
+  save(); showScreen('game'); renderGame();
+}
+
+// ── ROUND-ROBIN ──────────────────────────────────────────────
+function circleRoundRobin(n) {
+  const ids = Array.from({ length: n }, (_, i) => i);
+  const rounds = [];
+  for (let r = 0; r < n - 1; r++) {
+    const round = [];
+    for (let i = 0; i < n / 2; i++)
+      round.push({ a: ids[i], b: ids[n - 1 - i], scoreA: null, scoreB: null });
+    rounds.push(round);
+    const last = ids[n - 1];
+    for (let i = n - 1; i > 1; i--) ids[i] = ids[i - 1];
+    ids[1] = last;
+  }
+  return rounds;
+}
+
+// ── RENDER ───────────────────────────────────────────────────
+function renderGame() {
+  document.getElementById('hdr-title').textContent = '🎾 ' + S.name.toUpperCase();
+  renderMatches();
+  renderStandings();
+  updateProgress();
+}
+
+function renderMatches() {
+  const wrap = document.getElementById('rounds-wrap');
+  wrap.innerHTML = '';
+
+  S.rounds.forEach((round, ri) => {
+    const block = document.createElement('div');
+    block.className = 'round-block';
+    block.innerHTML = `<div class="round-lbl">Turno ${ri + 1}</div>`;
+
+    round.forEach((m, mi) => {
+      const na  = S.players[m.a];
+      const nb  = S.players[m.b];
+      const bye = na === BYE || nb === BYE;
+      const la  = bye ? 'Turno libero' : na;
+      const lb  = bye ? '—' : nb;
+      const va  = m.scoreA !== null ? m.scoreA : '';
+      const vb  = m.scoreB !== null ? m.scoreB : '';
+
+      const played  = isPlayed(m);
+      const invalid = !played && m.scoreA !== null && m.scoreB !== null && !bye;
+
+      const row = document.createElement('div');
+      row.className = 'match-row' +
+        (played  ? ' played'  : '') +
+        (invalid ? ' invalid' : '') +
+        (bye     ? ' bye-row' : '');
+      row.id = `m-${ri}-${mi}`;
+
+      row.innerHTML = `
+        <div class="mn-a" title="${la}">${la}</div>
+        <div class="score-area">
+          <input type="number" min="0" max="2" step="1" value="${va}"
+            id="sa-${ri}-${mi}" oninput="onScoreInput(${ri},${mi})"
+            title="Set vinti da ${la}"/>
+          <div class="score-sep-wrap">
+            <span class="score-sep">–</span>
+            <span class="score-set-lbl">set</span>
+          </div>
+          <input type="number" min="0" max="2" step="1" value="${vb}"
+            id="sb-${ri}-${mi}" oninput="onScoreInput(${ri},${mi})"
+            title="Set vinti da ${lb}"/>
+        </div>
+        <div class="mn-b" title="${lb}">${lb}</div>
+      `;
+      block.appendChild(row);
+    });
+
+    wrap.appendChild(block);
+  });
+}
+
+// Risultato valido: uno dei due ha 2 set, l'altro 0 o 1 (best of 3)
+function isValidScore(a, b) {
+  if (a === null || b === null) return false;
+  return (a === 2 && (b === 0 || b === 1)) || (b === 2 && (a === 0 || a === 1));
+}
+
+function isPlayed(m) {
+  return isValidScore(m.scoreA, m.scoreB);
+}
+
+function onScoreInput(ri, mi) {
+  const ia = document.getElementById(`sa-${ri}-${mi}`);
+  const ib = document.getElementById(`sb-${ri}-${mi}`);
+
+  const rawA = ia.value.trim(), rawB = ib.value.trim();
+  let va = rawA === '' ? null : parseInt(rawA);
+  let vb = rawB === '' ? null : parseInt(rawB);
+  if (va !== null && (isNaN(va) || va < 0)) { va = 0; ia.value = 0; }
+  if (vb !== null && (isNaN(vb) || vb < 0)) { vb = 0; ib.value = 0; }
+
+  const m = S.rounds[ri][mi];
+  m.scoreA = va; m.scoreB = vb;
+
+  const played  = isPlayed(m);
+  const invalid = !played && va !== null && vb !== null;
+  const row = document.getElementById(`m-${ri}-${mi}`);
+  row.classList.toggle('played',  played);
+  row.classList.toggle('invalid', invalid);
+
+  save(); renderStandings(); updateProgress(); checkDone();
+}
+
+function updateProgress() {
+  const all  = S.rounds.flat().filter(m => S.players[m.a] !== BYE && S.players[m.b] !== BYE);
+  const done = all.filter(m => isPlayed(m)).length;
+  const pct  = all.length ? (done / all.length) * 100 : 0;
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('hdr-prog').textContent  = `${done} / ${all.length} partite`;
+}
+
+function checkDone() {
+  const all = S.rounds.flat().filter(m => S.players[m.a] !== BYE && S.players[m.b] !== BYE);
+  if (all.length && all.every(m => isPlayed(m))) setTimeout(showWinner, 800);
+}
+
+// ── CLASSIFICA — regolamento tennis: V=1pt, S=0pt ───────────
+// Spareggi: PTS → differenza set → set vinti → alfabetico
+function computeStandings() {
+  const idx = {};
+  S.players.forEach((name, i) => {
+    if (name !== BYE) idx[i] = { name, pg:0, v:0, s:0, sw:0, sl:0, pts:0 };
+  });
+
+  S.rounds.forEach(round => round.forEach(m => {
+    if (!isPlayed(m)) return;
+    const A = idx[m.a], B = idx[m.b];
+    if (!A || !B) return;
+    A.pg++; B.pg++;
+    A.sw += m.scoreA; A.sl += m.scoreB;
+    B.sw += m.scoreB; B.sl += m.scoreA;
+    if (m.scoreA > m.scoreB) { A.v++; A.pts++; B.s++; }
+    else                      { B.v++; B.pts++; A.s++; }
+  }));
+
+  return Object.values(idx).sort((a, b) => {
+    if (b.pts !== a.pts) return b.pts - a.pts;
+    const da = a.sw - a.sl, db = b.sw - b.sl;
+    if (db !== da) return db - da;
+    if (b.sw !== a.sw) return b.sw - a.sw;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+function stTableHTML(rows) {
+  const medals = ['🥇', '🥈', '🥉'];
+  let h = `<table class="st"><thead><tr>
+    <th>Pos</th><th class="nm" style="text-align:left">Nome</th>
+    <th title="Partite Giocate">PG</th>
+    <th title="Vittorie">V</th>
+    <th title="Sconfitte">S</th>
+    <th title="Set Vinti">SV</th>
+    <th title="Set Persi">SP</th>
+    <th title="Differenza Set">DS</th>
+    <th title="Punti">Pts</th>
+  </tr></thead><tbody>`;
+
+  rows.forEach((r, i) => {
+    const ds  = r.sw - r.sl;
+    const dss = ds >= 0 ? ('+' + ds) : '' + ds;
+    const rc  = i < 3 ? 'r' + (i + 1) : '';
+    const bk  = i < 3 ? medals[i] : (i + 1);
+    h += `<tr class="${rc}">
+      <td><span class="rbadge">${bk}</span></td>
+      <td class="nm" title="${r.name}">${r.name}</td>
+      <td>${r.pg}</td><td>${r.v}</td><td>${r.s}</td>
+      <td>${r.sw}</td><td>${r.sl}</td><td>${dss}</td>
+      <td><strong>${r.pts}</strong></td>
+    </tr>`;
+  });
+  return h + '</tbody></table>';
+}
+
+function renderStandings() {
+  document.getElementById('standings-wrap').innerHTML = stTableHTML(computeStandings());
+}
+
+// ── VINCITORE ────────────────────────────────────────────────
+function showWinner() {
+  const rows = computeStandings();
+  const w    = rows[0];
+
+  document.getElementById('w-name').textContent  = w.name;
+  document.getElementById('w-event').textContent = S.name;
+
+  const order = [
+    { d: rows[1], cls: 'pod2', lbl: '2°' },
+    { d: rows[0], cls: 'pod1', lbl: '1°' },
+    { d: rows[2], cls: 'pod3', lbl: '3°' },
+  ];
+  document.getElementById('podium').innerHTML = order.map(p => `
+    <div class="pod-pl ${p.cls}">
+      <div class="pod-name">${p.d ? p.d.name : '—'}</div>
+      <div class="pod-pts">${p.d ? p.d.pts + ' pt' : ''}</div>
+      <div class="pod-blk">${p.lbl}</div>
+    </div>`).join('');
+
+  document.getElementById('winner-st').innerHTML = stTableHTML(rows);
+  showScreen('winner');
+  launchConfetti();
+}
+
+function launchConfetti() {
+  const box = document.getElementById('confetti-box');
+  box.innerHTML = '';
+  const colors = ['#ffd700','#00ff88','#ff6b6b','#74b9ff','#fd79a8','#a29bfe','#ffffff'];
+  for (let i = 0; i < 90; i++) {
+    const el = document.createElement('div');
+    el.className = 'bit';
+    const sz = 6 + Math.random() * 9;
+    Object.assign(el.style, {
+      left:              (Math.random() * 100) + 'vw',
+      width:             sz + 'px',
+      height:            sz + 'px',
+      background:        colors[Math.floor(Math.random() * colors.length)],
+      borderRadius:      Math.random() > .45 ? '50%' : '2px',
+      animationDuration: (2.5 + Math.random() * 3.5) + 's',
+      animationDelay:    (Math.random() * 7) + 's',
+      opacity:           (.65 + Math.random() * .35),
+    });
+    box.appendChild(el);
+  }
+}
+
+// ── RESET ────────────────────────────────────────────────────
+function onReset() {
+  if (!confirm('Resettare il torneo? Tutti i dati andranno persi.')) return;
+  clearAndGoSetup();
+}
+function onNewTournament() {
+  if (!confirm('Iniziare un nuovo torneo? I risultati andranno persi.')) return;
+  clearAndGoSetup();
+}
+function clearAndGoSetup() {
+  S = null; localStorage.removeItem(LS);
+  document.getElementById('inp-tname').value = '';
+  document.getElementById('setup-err').textContent = '';
+  document.getElementById('sel-n').value = '4';
+  buildFields();
+  showScreen('setup');
+}
+
+function save() { localStorage.setItem(LS, JSON.stringify(S)); }
+</script>
+</body>
+</html>
